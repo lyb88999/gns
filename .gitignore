@@ -1,0 +1,58 @@
+# System Files
+.DS_Store
+Thumbs.db
+*.swp
+
+# IDE Configs
+.idea/
+.vscode/
+*.iml
+*.sublime-workspace
+*.sublime-project
+
+# Java / Maven
+target/
+*.class
+*.jar
+*.war
+*.ear
+mvnw
+mvnw.cmd
+.mvn/
+
+# Node.js / Frontend
+node_modules/
+dist/
+build/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+frontend/node_modules/
+frontend/dist/
+
+# Python SDK
+sdks/python/build/
+sdks/python/dist/
+sdks/python/*.egg-info/
+sdks/python/__pycache__/
+sdks/python/*.pyc
+sdks/python/.pytest_cache/
+sdks/python/venv/
+
+# Go SDK
+sdks/go/bin/
+sdks/go/gns-sdk
+sdks/go/*.test
+sdks/go/*.out
+
+# Logs
+logs/
+*.log
+
+# Temp
+tmp/

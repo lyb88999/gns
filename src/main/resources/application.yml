@@ -1,0 +1,49 @@
+server:
+  port: 8080
+spring:
+  application:
+    name: universal-notification-system
+  datasource:
+    url: jdbc:mysql://localhost:3306/gns?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: root
+    password: Lyb1217..
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+      database: 2
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  jackson:
+    default-property-inclusion: non_null
+  mail:
+    host: smtp.qq.com
+    username: yubolee1217@qq.com
+    password: hvcfuedyhiuxcdhb
+    port: 465
+    properties:
+      mail:
+        smtp:
+          auth: true
+          ssl:
+            enable: true
+    from: yubolee1217@qq.com
+mybatis-plus:
+  mapper-locations: classpath:/mapper/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+app:
+  security:
+    jwt-secret: change-me
+    jwt-expiration-hours: 24
+  notification:
+    redis-stream-key: gns:notifications
+    consumer-group: gns-workers
+    consumer-name: gns-worker-1
+logging:
+  level:
+    root: INFO
+    com.gns.notification: DEBUG
