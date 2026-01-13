@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GNS API 文档</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/github-dark.min.css">
+    <script>hljs.highlightAll();</script>
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans SC', sans-serif;
+        }
+
+        .prose pre {
+            background-color: #0d1117;
+            border-radius: 0.5rem;
+        }
+
+        .sidebar-link.active {
+            background-color: #ebf8ff;
+            color: #2b6cb0;
+            border-right: 3px solid #3182ce;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-900">
+
+    <!-- Top Nav -->
+    <nav class="fixed w-full z-50 bg-white border-b border-gray-200">
+        <div class="px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <a href="index.html" class="flex-shrink-0 flex items-center">
+                        <span
+                            class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">GNS
+                            Docs</span>
+                    </a>
+                </div>
+                <div class="hidden md:flex space-x-8">
+                    <a href="index.html" class="text-gray-500 hover:text-gray-900 font-medium">返回首页</a>
+                    <a href="#" class="text-blue-600 font-medium">API 参考</a>
+                    <a href="#" class="text-gray-500 hover:text-gray-900 font-medium">SDK</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="flex pt-16 h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <div class="hidden md:flex md:flex-shrink-0 w-64 bg-white border-r border-gray-200 overflow-y-auto">
+            <div class="flex flex-col w-full py-6">
+                <nav class="space-y-1">
+                    <a href="#intro"
+                        class="sidebar-link active block px-6 py-2 text-sm font-medium text-gray-900">简介</a>
+                    <a href="#auth"
+                        class="sidebar-link block px-6 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900">1.
+                        认证 (Auth)</a>
+                    <a href="#notify"
+                        class="sidebar-link block px-6 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900">2.
+                        通知 (Notify)</a>
+                    <a href="#tasks"
+                        class="sidebar-link block px-6 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900">3.
+                        任务 (Tasks)</a>
+                    <a href="#logs"
+                        class="sidebar-link block px-6 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900">4.
+                        日志 (Logs)</a>
+                    <a href="#tokens"
+                        class="sidebar-link block px-6 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900">5.
+                        令牌 (Tokens)</a>
+                    <a href="#admin"
+                        class="sidebar-link block px-6 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900">6.
+                        管理 (Admin)</a>
+                    <a href="#system"
+                        class="sidebar-link block px-6 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900">7.
+                        系统 (System)</a>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <main class="flex-1 overflow-y-auto bg-white p-8 lg:p-12">
+            <div class="max-w-4xl mx-auto prose prose-blue prose-lg">
+
+                <h1 id="intro" class="text-3xl font-extrabold text-gray-900 mb-6">API 参考文档</h1>
+                <p class="text-gray-600 mb-8">
+                    Endpoint: <code class="bg-gray-100 px-2 py-1 rounded">http://&lt;your-server&gt;:8080</code><br>
+                    认证方式: Bearer Token
+                </p>
+
+                <hr class="border-gray-200 my-8">
+
+                <section id="auth" class="mb-16">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-4">1. 认证 (Auth)</h2>
+
+                    <h3 class="text-xl font-semibold text-gray-800 mt-6 mb-2">1.1 用户登录</h3>
+                    <div class="flex items-center space-x-2 mb-4">
+                        <span class="px-2 py-1 text-xs font-bold rounded bg-green-100 text-green-800">POST</span>
+                        <code class="text-sm">/api/v1/auth/login</code>
+                    </div>
+                    <pre><code class="language-json">{
+  "username": "admin",
+  "password": "password"
+}</code></pre>
+
+                    <h3 class="text-xl font-semibold text-gray-800 mt-8 mb-2">1.2 获取当前用户</h3>
+                    <div class="flex items-center space-x-2 mb-4">
+                        <span class="px-2 py-1 text-xs font-bold rounded bg-blue-100 text-blue-800">GET</span>
+                        <code class="text-sm">/api/v1/auth/me</code>
+                    </div>
+                </section>
+
+                <hr class="border-gray-200 my-8">
+
+                <section id="notify" class="mb-16">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-4">2. 通知 (Notify)</h2>
+
+                    <h3 class="text-xl font-semibold text-gray-800 mt-6 mb-2">2.1 发送通知</h3>
+                    <div class="flex items-center space-x-2 mb-4">
+                        <span class="px-2 py-1 text-xs font-bold rounded bg-green-100 text-green-800">POST</span>
+                        <code class="text-sm">/api/v1/notify</code>
+                    </div>
+                    <p class="text-gray-600 mb-4">发送单条通知。支持附件与自定义变量。</p>
+                    <pre><code class="language-json">{
+  "taskId": "UUID...",
+  "data": { "key": "value" },
+  "priority": "High"
+}</code></pre>
+                </section>
+
+                <hr class="border-gray-200 my-8">
+
+                <section id="tasks" class="mb-16">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-4">3. 任务管理 (Tasks)</h2>
+
+                    <h3 class="text-xl font-semibold text-gray-800 mt-6 mb-2">3.1 创建任务</h3>
+                    <div class="flex items-center space-x-2 mb-4">
+                        <span class="px-2 py-1 text-xs font-bold rounded bg-green-100 text-green-800">POST</span>
+                        <code class="text-sm">/api/v1/tasks</code>
+                    </div>
+                    <pre><code class="language-json">{
+  "name": "每日报表",
+  "triggerType": "cron",
+  "cronExpression": "0 0 12 * * ?",
+  "channels": ["Email", "DingTalk"],
+  "messageTemplate": "模版内容..."
+}</code></pre>
+
+                    <h3 class="text-xl font-semibold text-gray-800 mt-8 mb-2">3.2 任务列表</h3>
+                    <div class="flex items-center space-x-2 mb-4">
+                        <span class="px-2 py-1 text-xs font-bold rounded bg-blue-100 text-blue-800">GET</span>
+                        <code class="text-sm">/api/v1/tasks?page=0&size=10</code>
+                    </div>
+                </section>
+
+                <hr class="border-gray-200 my-8">
+
+                <section id="logs" class="mb-16">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-4">4. 日志 (Logs)</h2>
+                    <div class="flex items-center space-x-2 mb-4">
+                        <span class="px-2 py-1 text-xs font-bold rounded bg-blue-100 text-blue-800">GET</span>
+                        <code class="text-sm">/api/v1/logs</code>
+                    </div>
+                    <p class="text-gray-600">参数: <code>page</code>, <code>size</code>, <code>status</code>
+                        (SUCCESS/FAILED/BLOCKED), <code>search</code></p>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+</body>
+
+</html>
