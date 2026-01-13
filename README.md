@@ -2,7 +2,7 @@
 
 **GNS (General Notification System)** 是一个现代化的企业级通知分发平台。它将内部各种通知渠道（邮件、钉钉、企业微信、短信等）统一为一个稳定可靠的 API，并提供高级的任务调度、速率限制和基于角色的权限控制 (RBAC) 能力。
 
-![Dashboard Preview](https://via.placeholder.com/800x400?text=GNS+Dashboard+Preview)
+![Dashboard Preview](docs/assets/dashboard.png)
 
 ---
 
