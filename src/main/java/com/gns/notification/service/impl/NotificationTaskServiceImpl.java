@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.gns.notification.domain.NotificationTask;
 import com.gns.notification.domain.NotificationTaskMapper;
+import com.gns.notification.domain.User;
+import com.gns.notification.domain.UserMapper;
 import com.gns.notification.dto.NotificationTaskRequest;
 import com.gns.notification.dto.NotificationTaskResponse;
 import com.gns.notification.dto.PageResult;
@@ -16,7 +18,10 @@ import java.time.LocalTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
+
+import com.gns.notification.service.scheduler.TaskSchedulerEngine;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -27,11 +32,15 @@ import org.springframework.data.domain.Pageable;
 public class NotificationTaskServiceImpl implements NotificationTaskService {
 
     private final NotificationTaskMapper mapper;
-    private final com.gns.notification.domain.UserMapper userMapper;
+    private final UserMapper userMapper;
+    private final TaskSchedulerEngine schedulerEngine;
 
-    public NotificationTaskServiceImpl(NotificationTaskMapper mapper, com.gns.notification.domain.UserMapper userMapper) {
+    public NotificationTaskServiceImpl(NotificationTaskMapper mapper, 
+                                       UserMapper userMapper,
+                                       TaskSchedulerEngine schedulerEngine) {
         this.mapper = mapper;
         this.userMapper = userMapper;
+        this.schedulerEngine = schedulerEngine;
     }
 
     @Override
@@ -40,12 +49,18 @@ public class NotificationTaskServiceImpl implements NotificationTaskService {
         NotificationTask entity = new NotificationTask();
         applyRequest(entity, request);
         if (!StringUtils.hasText(entity.getTaskId())) {
-            entity.setTaskId(java.util.UUID.randomUUID().toString());
+            entity.setTaskId(UUID.randomUUID().toString());
         }
         entity.setUserId(context.getUserId());
         entity.setTeamId(context.getTeamId());
         entity.setStatus(Boolean.TRUE);
         mapper.insert(entity);
+        
+        // Schedule if cron
+        if ("cron".equals(entity.getTriggerType())) {
+             schedulerEngine.schedule(entity);
+        }
+        
         return toResponse(entity);
     }
 
@@ -55,6 +70,14 @@ public class NotificationTaskServiceImpl implements NotificationTaskService {
         ensureAccess(entity);
         applyRequest(entity, request);
         mapper.updateById(entity);
+
+        // Update schedule
+        if ("cron".equals(entity.getTriggerType())) {
+            schedulerEngine.schedule(entity);
+        } else {
+            schedulerEngine.remove(entity);
+        }
+
         return toResponse(entity);
     }
 
@@ -79,6 +102,9 @@ public class NotificationTaskServiceImpl implements NotificationTaskService {
     public void deleteTask(String taskId) {
         NotificationTask entity = fetchByTaskId(taskId);
         ensureAccess(entity);
+        
+        schedulerEngine.remove(entity);
+        
         mapper.deleteById(entity.getId());
     }
 
@@ -113,7 +139,7 @@ public class NotificationTaskServiceImpl implements NotificationTaskService {
         entity.setSilentStart(parseTime(request.getSilentStart()));
         entity.setSilentEnd(parseTime(request.getSilentEnd()));
         entity.setMergeWindowMinutes(request.getMergeWindowMinutes());
-        if (request.getStatus() != null) {
+        if (Objects.nonNull(request.getStatus())) {
             entity.setStatus(request.getStatus());
         }
     }
@@ -131,9 +157,9 @@ public class NotificationTaskServiceImpl implements NotificationTaskService {
         response.setName(entity.getName());
         response.setDescription(entity.getDescription());
         response.setUserId(entity.getUserId());
-        if (entity.getUserId() != null) {
-            com.gns.notification.domain.User user = userMapper.selectById(entity.getUserId());
-            if (user != null) {
+        if (Objects.nonNull(entity.getUserId())) {
+            User user = userMapper.selectById(entity.getUserId());
+            if (Objects.nonNull(user)) {
                 response.setCreatorName(user.getUsername());
             }
         }
@@ -147,8 +173,8 @@ public class NotificationTaskServiceImpl implements NotificationTaskService {
         response.setRateLimitEnabled(entity.getRateLimitEnabled());
         response.setMaxPerHour(entity.getMaxPerHour());
         response.setMaxPerDay(entity.getMaxPerDay());
-        response.setSilentStart(entity.getSilentStart() == null ? null : entity.getSilentStart().toString());
-        response.setSilentEnd(entity.getSilentEnd() == null ? null : entity.getSilentEnd().toString());
+        response.setSilentStart(Objects.isNull(entity.getSilentStart()) ? null : entity.getSilentStart().toString());
+        response.setSilentEnd(Objects.isNull(entity.getSilentEnd()) ? null : entity.getSilentEnd().toString());
         response.setMergeWindowMinutes(entity.getMergeWindowMinutes());
         response.setStatus(entity.getStatus());
         response.setCreatedAt(entity.getCreatedAt());
@@ -161,7 +187,7 @@ public class NotificationTaskServiceImpl implements NotificationTaskService {
 
     private UserContext requireUser() {
         UserContext context = UserContextHolder.get();
-        if (context == null) {
+        if (Objects.isNull(context)) {
             throw new UnauthorizedException("用户未登录");
         }
         return context;
@@ -188,7 +214,7 @@ public class NotificationTaskServiceImpl implements NotificationTaskService {
             return wrapper;
         }
         if (context.isTeamAdmin()) {
-            if (context.getTeamId() != null) {
+            if (Objects.nonNull(context.getTeamId())) {
                 wrapper.eq(NotificationTask::getTeamId, context.getTeamId());
             } else {
                 wrapper.isNull(NotificationTask::getTeamId);

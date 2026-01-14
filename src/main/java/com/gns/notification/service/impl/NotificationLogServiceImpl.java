@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -58,7 +59,7 @@ public class NotificationLogServiceImpl implements NotificationLogService {
                 .taskName(log.getTaskName())
                 .channel(log.getChannel())
                 .recipient(log.getRecipient())
-                .status(log.getStatus() == null ? null : log.getStatus().toUpperCase())
+                .status(Objects.isNull(log.getStatus()) ? null : log.getStatus().toUpperCase())
                 .errorMessage(log.getErrorMessage())
                 .sentAt(log.getSentAt())
                 .build();

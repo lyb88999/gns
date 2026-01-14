@@ -15,6 +15,7 @@ import com.gns.notification.dto.RegisterRequest;
 import java.time.LocalDateTime;
 
 import java.time.Duration;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -70,11 +71,11 @@ public class AuthServiceImpl implements AuthService {
         User user = userMapper.selectOne(new LambdaQueryWrapper<User>()
                 .eq(User::getUsername, request.getUsername()));
 
-        if (user == null || !passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+        if (Objects.isNull(user) || !passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new RuntimeException("Invalid username or password");
         }
 
-        if (user.getStatus() != null && user.getStatus() == 0) {
+        if (Objects.nonNull(user.getStatus()) && user.getStatus() == 0) {
             throw new RuntimeException("Account is disabled");
         }
 
@@ -104,14 +105,14 @@ public class AuthServiceImpl implements AuthService {
         String key = TOKEN_PREFIX + token;
         String userIdStr = redisTemplate.opsForValue().get(key);
 
-        if (userIdStr == null) {
+        if (Objects.isNull(userIdStr)) {
             throw new RuntimeException("Invalid or expired token");
         }
 
         Long userId = Long.parseLong(userIdStr);
         User user = userMapper.selectById(userId);
         
-        if (user == null) {
+        if (Objects.isNull(user)) {
              throw new RuntimeException("User not found");
         }
 

@@ -21,6 +21,7 @@ export default {
         success: 'Success',
         failed: 'Failed',
         blocked: 'Blocked',
+        skipped: 'Skipped',
         details: 'Details',
         all: 'All',
         on: 'ON',
@@ -69,7 +70,9 @@ export default {
         name: 'Task Name',
         description: 'Description',
         channels: 'Channels',
+        creator: 'Creator',
         cron: 'Cron Expression',
+        cronExpression: 'Cron Expression',
         messageTemplate: 'Message Template',
         active: 'Active',
         disabled: 'Disabled',
@@ -102,7 +105,10 @@ export default {
     },
     logs: {
         showingLast7Days: 'Showing last 7 days',
-        filterByStatus: 'Filter by Status'
+        filterByStatus: 'Filter by Status',
+        recipient: 'Recipient',
+        time: 'Time',
+        error: 'Error'
     },
     settings: {
         appearance: 'Appearance',

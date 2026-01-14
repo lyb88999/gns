@@ -21,6 +21,7 @@ export default {
         success: '成功',
         failed: '失败',
         blocked: '已拦截',
+        skipped: '已跳过',
         details: '详情',
         all: '全部',
         on: '开',
@@ -69,7 +70,9 @@ export default {
         name: '任务名称',
         description: '描述',
         channels: '通知渠道',
+        creator: '创建者',
         cron: 'Cron 表达式',
+        cronExpression: 'Cron 表达式',
         messageTemplate: '消息模板',
         active: '启用',
         disabled: '禁用',
@@ -102,7 +105,10 @@ export default {
     },
     logs: {
         showingLast7Days: '展示最近 7 天记录',
-        filterByStatus: '按状态筛选'
+        filterByStatus: '按状态筛选',
+        recipient: '接收者',
+        time: '时间',
+        error: '错误信息'
     },
     settings: {
         appearance: '外观设置',

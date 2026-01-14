@@ -17,6 +17,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.springframework.data.domain.Pageable;
@@ -36,7 +37,7 @@ public class ApiTokenServiceImpl implements ApiTokenService {
     @Override
     public ApiTokenResponse createToken(ApiTokenRequest request) {
         UserContext context = UserContextHolder.get();
-        if (context == null) {
+        if (Objects.isNull(context)) {
             throw new UnauthorizedException("用户未登录");
         }
         String rawToken = generateRawToken();
@@ -57,7 +58,7 @@ public class ApiTokenServiceImpl implements ApiTokenService {
         UserContext context = UserContextHolder.requireUser();
         LambdaQueryWrapper<ApiToken> wrapper = new LambdaQueryWrapper<>();
         if (context.isAdmin()) {
-            if (userId != null) {
+            if (Objects.nonNull(userId)) {
                 wrapper.eq(ApiToken::getUserId, userId);
             }
         } else {
@@ -87,7 +88,7 @@ public class ApiTokenServiceImpl implements ApiTokenService {
 
     private ApiToken findToken(Long id) {
         ApiToken token = apiTokenMapper.selectById(id);
-        if (token == null) {
+        if (Objects.isNull(token)) {
             throw new IllegalArgumentException("Token not found: " + id);
         }
         return token;

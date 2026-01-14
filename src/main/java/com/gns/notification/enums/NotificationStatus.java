@@ -7,7 +7,8 @@ public enum NotificationStatus {
     PENDING("pending"),
     SUCCESS("success"),
     FAILED("failed"),
-    BLOCKED("blocked");
+    BLOCKED("blocked"),
+    SKIPPED("skipped");
 
     @EnumValue
     @JsonValue

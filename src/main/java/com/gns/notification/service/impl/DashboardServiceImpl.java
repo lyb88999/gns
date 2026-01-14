@@ -6,16 +6,16 @@ import com.gns.notification.domain.NotificationLogMapper;
 import com.gns.notification.domain.NotificationTask;
 import com.gns.notification.domain.NotificationTaskMapper;
 import com.gns.notification.dto.DashboardStatsResponse;
+import com.gns.notification.enums.NotificationStatus;
+import com.gns.notification.security.UserContext;
+import com.gns.notification.security.UserContextHolder;
 import com.gns.notification.service.DashboardService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -27,11 +27,11 @@ public class DashboardServiceImpl implements DashboardService {
 
 
 
-    private com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<NotificationLog> buildLogWrapper() {
-        com.gns.notification.security.UserContext ctx = com.gns.notification.security.UserContextHolder.get();
-        com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<NotificationLog> wrapper = new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<>();
+    private QueryWrapper<NotificationLog> buildLogWrapper() {
+        UserContext ctx = UserContextHolder.get();
+        QueryWrapper<NotificationLog> wrapper = new QueryWrapper<>();
         
-        if (ctx == null || ctx.isAdmin()) {
+        if (Objects.isNull(ctx) || ctx.isAdmin()) {
             return wrapper;
         }
         if (ctx.isTeamAdmin()) {
@@ -54,11 +54,11 @@ public class DashboardServiceImpl implements DashboardService {
         return wrapper;
     }
 
-    private com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<NotificationTask> buildTaskWrapper() {
-        com.gns.notification.security.UserContext ctx = com.gns.notification.security.UserContextHolder.get();
-        com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<NotificationTask> wrapper = new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<>();
+    private QueryWrapper<NotificationTask> buildTaskWrapper() {
+        UserContext ctx = UserContextHolder.get();
+        QueryWrapper<NotificationTask> wrapper = new QueryWrapper<>();
         
-        if (ctx == null || ctx.isAdmin()) {
+        if (Objects.isNull(ctx) || ctx.isAdmin()) {
             return wrapper;
         }
         if (ctx.isTeamAdmin()) {
@@ -71,25 +71,27 @@ public class DashboardServiceImpl implements DashboardService {
 
     @Override
     public DashboardStatsResponse getStats() {
-        // 1. Total Notifications
-        Long totalNotifications = logMapper.selectCount(buildLogWrapper());
+        // 1. Total Notifications (Excluding SKIPPED)
+        QueryWrapper<NotificationLog> totalWrapper = buildLogWrapper();
+        totalWrapper.ne("status", "skipped");
+        Long totalNotifications = logMapper.selectCount(totalWrapper);
 
         // 2. Success Rate
-        com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<NotificationLog> successWrapper = buildLogWrapper();
-        successWrapper.and(w -> w.eq("status", com.gns.notification.enums.NotificationStatus.SUCCESS.getValue())
+        QueryWrapper<NotificationLog> successWrapper = buildLogWrapper();
+        successWrapper.and(w -> w.eq("status", NotificationStatus.SUCCESS.getValue())
                                  .or()
                                  .eq("status", "SUCCESS"));
         Long successCount = logMapper.selectCount(successWrapper);
         double successRate = totalNotifications > 0 ? (double) successCount / totalNotifications * 100 : 0;
 
         // 3. Active Tasks
-        com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<NotificationTask> taskWrapper = buildTaskWrapper();
+        QueryWrapper<NotificationTask> taskWrapper = buildTaskWrapper();
         taskWrapper.eq("status", true);
         Long activeTasks = taskMapper.selectCount(taskWrapper);
 
         // 4. Volume 24h
         LocalDateTime twentyFourHoursAgo = LocalDateTime.now().minusHours(24);
-        com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<NotificationLog> recentWrapper = buildLogWrapper();
+        QueryWrapper<NotificationLog> recentWrapper = buildLogWrapper();
         recentWrapper.ge("created_at", twentyFourHoursAgo);
         
         List<NotificationLog> recentLogs = logMapper.selectList(recentWrapper);

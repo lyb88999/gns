@@ -3,7 +3,6 @@ package com.gns.notification;
 import com.gns.notification.domain.NotificationTask;
 import com.gns.notification.domain.NotificationTaskMapper;
 import com.gns.notification.exception.RateLimitExceededException;
-import com.gns.notification.service.scheduler.TaskSchedulerService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class TaskIntegrationTest {
 
     @Autowired
-    private TaskSchedulerService taskSchedulerService;
+    private com.gns.notification.service.scheduler.TaskExecutionService taskExecutionService;
 
     @Autowired
     private NotificationTaskMapper taskMapper;
@@ -73,7 +72,7 @@ public class TaskIntegrationTest {
     void testManualTriggerSuccess() {
         createTask(false, null, null, null);
         
-        assertDoesNotThrow(() -> taskSchedulerService.executeTask(taskId));
+        assertDoesNotThrow(() -> taskExecutionService.executeTask(taskId));
     }
 
     @Test
@@ -81,11 +80,11 @@ public class TaskIntegrationTest {
         createTask(true, 1, null, null);
 
         // First run: Success
-        assertDoesNotThrow(() -> taskSchedulerService.executeTask(taskId));
+        assertDoesNotThrow(() -> taskExecutionService.executeTask(taskId));
 
         // Second run: Should fail
         RateLimitExceededException exception = assertThrows(RateLimitExceededException.class, () -> {
-            taskSchedulerService.executeTask(taskId);
+            taskExecutionService.executeTask(taskId);
         });
         
         assertTrue(exception.getMessage().contains("Rate limit exceeded"));
@@ -101,7 +100,7 @@ public class TaskIntegrationTest {
         createTask(false, null, start, end);
 
         RateLimitExceededException exception = assertThrows(RateLimitExceededException.class, () -> {
-            taskSchedulerService.executeTask(taskId);
+            taskExecutionService.executeTask(taskId);
         });
 
         assertTrue(exception.getMessage().contains("Silent Mode is active"));

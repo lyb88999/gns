@@ -1,7 +1,12 @@
 package com.gns.notification.dto;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.List;
 
+@Setter
+@Getter
 public class PageResult<T> {
 
     private List<T> content;
@@ -17,27 +22,4 @@ public class PageResult<T> {
         this.totalPages = totalPages;
     }
 
-    public List<T> getContent() {
-        return content;
-    }
-
-    public void setContent(List<T> content) {
-        this.content = content;
-    }
-
-    public long getTotalElements() {
-        return totalElements;
-    }
-
-    public void setTotalElements(long totalElements) {
-        this.totalElements = totalElements;
-    }
-
-    public long getTotalPages() {
-        return totalPages;
-    }
-
-    public void setTotalPages(long totalPages) {
-        this.totalPages = totalPages;
-    }
 }

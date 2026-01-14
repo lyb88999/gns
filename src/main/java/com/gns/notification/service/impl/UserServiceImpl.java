@@ -82,7 +82,7 @@ public class UserServiceImpl implements UserService {
 
     private User findUser(Long id) {
         User user = userMapper.selectById(id);
-        if (user == null) {
+        if (Objects.isNull(user)) {
             throw new IllegalArgumentException("User not found: " + id);
         }
         return user;
@@ -90,7 +90,7 @@ public class UserServiceImpl implements UserService {
 
     private void ensureAdmin() {
         UserContext context = UserContextHolder.get();
-        if (context == null) {
+        if (Objects.isNull(context)) {
             throw new UnauthorizedException("用户未登录");
         }
         if (!context.isAdmin()) {
@@ -107,10 +107,10 @@ public class UserServiceImpl implements UserService {
     }
 
     private void validateTeam(Long teamId) {
-        if (teamId == null) {
+        if (Objects.isNull(teamId)) {
             return;
         }
-        if (teamMapper.selectById(teamId) == null) {
+        if (Objects.isNull(teamMapper.selectById(teamId))) {
             throw new IllegalArgumentException("Team not found: " + teamId);
         }
     }

@@ -1,11 +1,11 @@
 package com.gns.notification.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.gns.notification.domain.NotificationTask;
-import com.gns.notification.domain.NotificationTaskMapper;
-import com.gns.notification.domain.User;
-import com.gns.notification.domain.UserMapper;
+import com.gns.notification.domain.*;
+import com.gns.notification.enums.NotificationStatus;
+import com.gns.notification.service.DingTalkSender;
 import com.gns.notification.service.EmailAttachment;
 import com.gns.notification.service.EmailSender;
 import com.gns.notification.service.NotificationWorkerService;
@@ -30,6 +30,8 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import static java.util.Collections.emptyMap;
+
 @Service
 public class NotificationWorkerServiceImpl implements NotificationWorkerService {
 
@@ -44,15 +46,15 @@ public class NotificationWorkerServiceImpl implements NotificationWorkerService 
     private final String consumerGroup;
     private final String consumerName;
 
-    private final com.gns.notification.service.DingTalkSender dingTalkSender;
-    private final com.gns.notification.domain.NotificationLogMapper tableLogMapper;
+    private final DingTalkSender dingTalkSender;
+    private final NotificationLogMapper tableLogMapper;
 
     public NotificationWorkerServiceImpl(RedisTemplate<String, Object> redisTemplate,
                                          NotificationTaskMapper taskMapper,
                                          UserMapper userMapper,
                                          EmailSender emailSender,
-                                         com.gns.notification.service.DingTalkSender dingTalkSender,
-                                         com.gns.notification.domain.NotificationLogMapper tableLogMapper,
+                                         DingTalkSender dingTalkSender,
+                                         NotificationLogMapper tableLogMapper,
                                          @Value("${app.notification.redis-stream-key}") String streamKey,
                                          @Value("${app.notification.consumer-group}") String consumerGroup,
                                          @Value("${app.notification.consumer-name}") String consumerName) {
@@ -84,7 +86,7 @@ public class NotificationWorkerServiceImpl implements NotificationWorkerService 
         StreamOffset<String> offset = StreamOffset.create(streamKey, ReadOffset.lastConsumed());
         List<MapRecord<String, Object, Object>> messages = redisTemplate.opsForStream()
             .read(Consumer.from(consumerGroup, consumerName), options, offset);
-        if (messages == null || messages.isEmpty()) {
+        if (Objects.isNull(messages) || messages.isEmpty()) {
             return;
         }
         for (MapRecord<String, Object, Object> record : messages) {
@@ -100,27 +102,27 @@ public class NotificationWorkerServiceImpl implements NotificationWorkerService 
 
     private void handleRecord(String recordId, Map<Object, Object> value) throws JsonProcessingException {
         String taskId = (String) value.get("taskId");
-        NotificationTask task = taskMapper.selectOne(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<NotificationTask>()
+        NotificationTask task = taskMapper.selectOne(new LambdaQueryWrapper<NotificationTask>()
             .eq(NotificationTask::getTaskId, taskId));
-        if (task == null) {
+        if (Objects.isNull(task)) {
             log.warn("[Worker] task not found for record {} taskId={}", recordId, taskId);
             return;
         }
         Long userId = value.get("userId") instanceof Number ? ((Number) value.get("userId")).longValue() : null;
-        User user = userId == null ? null : userMapper.selectById(userId);
-        if (user == null || user.getEmail() == null) {
+        User user = Objects.isNull(userId) ? null : userMapper.selectById(userId);
+        if (Objects.isNull(user) || Objects.isNull(user.getEmail())) {
             log.warn("[Worker] user or email missing for record {} userId={}", recordId, userId);
             return;
         }
 
         Map<String, Object> data = safeMap(value.get("data"));
-        String subject = data.getOrDefault("title", task.getName()) == null
+        String subject = Objects.isNull(data.getOrDefault("title", task.getName()))
             ? task.getName()
             : String.valueOf(data.getOrDefault("title", task.getName()));
         String rendered = renderTemplate(task.getMessageTemplate(), data);
 
         // 1. Email (Legacy)
-        if (task.getChannels() != null && task.getChannels().contains("Email")) {
+        if (Objects.nonNull(task.getChannels()) && task.getChannels().contains("Email")) {
              boolean html = rendered.contains("<html") || rendered.contains("<body");
              List<String> receivers = resolveReceivers(data, user.getEmail());
              List<EmailAttachment> attachments = parseAttachments(value.get("attachments"));
@@ -128,39 +130,39 @@ public class NotificationWorkerServiceImpl implements NotificationWorkerService 
              for (String receiver : receivers) {
                  try {
                      emailSender.send(receiver, subject, rendered, html, attachments);
-                     saveLog(task, "Email", receiver, com.gns.notification.enums.NotificationStatus.SUCCESS.getValue(), null);
+                     saveLog(task, "Email", receiver, NotificationStatus.SUCCESS.getValue(), null);
                  } catch (Exception e) {
                      e.printStackTrace();
-                     saveLog(task, "Email", receiver, com.gns.notification.enums.NotificationStatus.FAILED.getValue(), e.getMessage());
+                     saveLog(task, "Email", receiver, NotificationStatus.FAILED.getValue(), e.getMessage());
                  }
              }
         }
 
         // 2. DingTalk
-        if (task.getChannels() != null && task.getChannels().contains("DingTalk")) {
+        if (Objects.nonNull(task.getChannels()) && task.getChannels().contains("DingTalk")) {
              dispatchDingTalk(task, rendered);
         }
     }
 
     private void dispatchDingTalk(NotificationTask task, String content) {
-        if (task.getCustomData() == null) {
+        if (Objects.isNull(task.getCustomData())) {
             return;
         }
         String webhook = (String) task.getCustomData().get("dingTalkWebhook");
         String secret = (String) task.getCustomData().get("dingTalkSecret");
-        if (webhook != null) {
+        if (Objects.nonNull(webhook)) {
             try {
                 dingTalkSender.send(webhook, secret, content);
-                saveLog(task, "DingTalk", webhook, com.gns.notification.enums.NotificationStatus.SUCCESS.getValue(), null);
+                saveLog(task, "DingTalk", webhook, NotificationStatus.SUCCESS.getValue(), null);
             } catch (Exception e) {
                 e.printStackTrace(); // Log error for debugging
-                saveLog(task, "DingTalk", webhook, com.gns.notification.enums.NotificationStatus.FAILED.getValue(), e.getMessage());
+                saveLog(task, "DingTalk", webhook, NotificationStatus.FAILED.getValue(), e.getMessage());
             }
         }
     }
 
     private void saveLog(NotificationTask task, String channel, String recipient, String status, String error) {
-        com.gns.notification.domain.NotificationLog log = new com.gns.notification.domain.NotificationLog();
+        NotificationLog log = new NotificationLog();
         log.setNotificationId(java.util.UUID.randomUUID().toString());
         log.setTaskId(task.getTaskId());
         log.setTaskName(task.getName());
@@ -182,11 +184,11 @@ public class NotificationWorkerServiceImpl implements NotificationWorkerService 
                     Map.Entry::getValue
                 ));
         }
-        return java.util.Collections.emptyMap();
+        return emptyMap();
     }
 
     private String renderTemplate(String template, Map<String, Object> data) throws JsonProcessingException {
-        if (template == null) {
+        if (Objects.isNull(template)) {
             return objectMapper.writeValueAsString(data);
         }
         Pattern pattern = Pattern.compile("\\$\\{([^}]+)}");
@@ -195,7 +197,7 @@ public class NotificationWorkerServiceImpl implements NotificationWorkerService 
         while (matcher.find()) {
             String key = matcher.group(1);
             Object value = data.get(key);
-            String replacement = value == null ? "" : value.toString();
+            String replacement = Objects.isNull(value) ? "" : value.toString();
             matcher.appendReplacement(sb, Matcher.quoteReplacement(replacement));
         }
         matcher.appendTail(sb);
@@ -207,12 +209,12 @@ public class NotificationWorkerServiceImpl implements NotificationWorkerService 
         Object rcObj = data.get("receivers");
         if (rcObj instanceof List<?> list) {
             for (Object item : list) {
-                if (item != null) {
+                if (Objects.nonNull(item)) {
                     receivers.add(String.valueOf(item));
                 }
             }
         }
-        if (receivers.isEmpty() && fallbackEmail != null) {
+        if (receivers.isEmpty() && Objects.nonNull(fallbackEmail)) {
             receivers.add(fallbackEmail);
         }
         return receivers;
@@ -229,7 +231,7 @@ public class NotificationWorkerServiceImpl implements NotificationWorkerService 
             }
             String filename = Objects.toString(map.get("filename"), null);
             Object contentObj = map.get("content");
-            if (contentObj == null) {
+            if (Objects.isNull(contentObj)) {
                 continue;
             }
             try {

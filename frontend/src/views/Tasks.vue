@@ -194,13 +194,13 @@ onMounted(() => {
                     <span class="font-medium text-gray-900 dark:text-gray-200">{{ row.name }}</span>
                 </template>
             </el-table-column>
-            <el-table-column v-if="authStore.user.role === 'admin'" prop="creatorName" label="Creator" width="120">
+            <el-table-column v-if="authStore.user.role === 'admin'" prop="creatorName" :label="t('tasks.creator')" width="120">
                  <template #default="{ row }">
                      <el-tag size="small" type="info">{{ row.creatorName || 'Unknown' }}</el-tag>
                  </template>
             </el-table-column>
             <el-table-column prop="description" :label="t('tasks.description')" />
-            <el-table-column prop="cronExpression" label="Cron" />
+            <el-table-column prop="cronExpression" :label="t('tasks.cron')" />
             <el-table-column prop="channel" :label="t('tasks.channels')">
                 <template #default="{ row }">
                     <div class="flex gap-1">
@@ -273,7 +273,7 @@ onMounted(() => {
                     <el-input v-model="form.customData.dingTalkSecret" placeholder="SEC..." show-password />
                 </el-form-item>
             </div>
-            <el-form-item :label="t('tasks.messageTemplate') || 'Message Template'">
+            <el-form-item :label="t('tasks.messageTemplate')">
                 <el-input 
                     v-model="form.messageTemplate" 
                     type="textarea" 
@@ -284,23 +284,23 @@ onMounted(() => {
         </el-form>
         
         <div class="mt-4 p-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg border border-gray-100 dark:border-gray-700">
-            <h3 class="font-bold text-sm mb-3 text-gray-700 dark:text-gray-300">{{ t('tasks.advancedSettings') || 'Advanced Settings' }}</h3>
+            <h3 class="font-bold text-sm mb-3 text-gray-700 dark:text-gray-300">{{ t('tasks.advancedSettings') }}</h3>
             <div class="grid grid-cols-2 gap-4">
-                <el-form-item :label="t('tasks.rateLimitEnabled') || 'Rate Limit'">
+                <el-form-item :label="t('tasks.rateLimitEnabled')">
                     <el-switch v-model="form.rateLimitEnabled" />
                 </el-form-item>
-                 <el-form-item v-if="form.rateLimitEnabled" :label="t('tasks.maxPerHour') || 'Max / Hour'">
+                 <el-form-item v-if="form.rateLimitEnabled" :label="t('tasks.maxPerHour')">
                     <el-input-number v-model="form.maxPerHour" :min="0" controls-position="right" class="w-full" />
                 </el-form-item>
-                <el-form-item v-if="form.rateLimitEnabled" :label="t('tasks.maxPerDay') || 'Max / Day'">
+                <el-form-item v-if="form.rateLimitEnabled" :label="t('tasks.maxPerDay')">
                     <el-input-number v-model="form.maxPerDay" :min="0" controls-position="right" class="w-full" />
                 </el-form-item>
             </div>
             <div class="grid grid-cols-2 gap-4">
-                <el-form-item :label="t('tasks.silentStart') || 'Silent Start'">
+                <el-form-item :label="t('tasks.silentStart')">
                     <el-time-picker v-model="form.silentStart" format="HH:mm" value-format="HH:mm:ss" placeholder="Start time" class="w-full" />
                 </el-form-item>
-                <el-form-item :label="t('tasks.silentEnd') || 'Silent End'">
+                <el-form-item :label="t('tasks.silentEnd')">
                     <el-time-picker v-model="form.silentEnd" format="HH:mm" value-format="HH:mm:ss" placeholder="End time" class="w-full" />
                 </el-form-item>
             </div>

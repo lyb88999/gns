@@ -2,6 +2,8 @@ package com.gns.notification.security;
 
 import com.gns.notification.exception.UnauthorizedException;
 
+import java.util.Objects;
+
 public final class UserContextHolder {
 
     private static final ThreadLocal<UserContext> CONTEXT = new ThreadLocal<>();
@@ -19,7 +21,7 @@ public final class UserContextHolder {
 
     public static UserContext requireUser() {
         UserContext context = CONTEXT.get();
-        if (context == null) {
+        if (Objects.isNull(context)) {
             throw new UnauthorizedException("用户未登录或上下文缺失");
         }
         return context;

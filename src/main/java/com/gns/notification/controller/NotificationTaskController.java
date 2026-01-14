@@ -4,7 +4,7 @@ import com.gns.notification.dto.NotificationTaskRequest;
 import com.gns.notification.dto.NotificationTaskResponse;
 import com.gns.notification.dto.PageResult;
 import com.gns.notification.service.NotificationTaskService;
-import com.gns.notification.service.scheduler.TaskSchedulerService;
+import com.gns.notification.service.scheduler.TaskExecutionService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
@@ -15,11 +15,11 @@ import org.springframework.web.bind.annotation.*;
 public class NotificationTaskController {
 
     private final NotificationTaskService taskService;
-    private final TaskSchedulerService taskSchedulerService;
+    private final TaskExecutionService taskExecutionService;
 
-    public NotificationTaskController(NotificationTaskService taskService, TaskSchedulerService taskSchedulerService) {
+    public NotificationTaskController(NotificationTaskService taskService, TaskExecutionService taskExecutionService) {
         this.taskService = taskService;
-        this.taskSchedulerService = taskSchedulerService;
+        this.taskExecutionService = taskExecutionService;
     }
 
     @PostMapping
@@ -54,7 +54,7 @@ public class NotificationTaskController {
 
     @PostMapping("/{taskId}/execute")
     public ResponseEntity<Void> executeTask(@PathVariable String taskId) {
-        taskSchedulerService.executeTask(taskId);
+        taskExecutionService.executeTask(taskId);
         return ResponseEntity.ok().build();
     }
 }

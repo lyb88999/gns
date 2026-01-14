@@ -1,5 +1,7 @@
 package com.gns.notification.security;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.gns.notification.domain.ApiToken;
 import com.gns.notification.domain.User;
 import com.gns.notification.domain.UserMapper;
 import com.gns.notification.exception.UnauthorizedException;
@@ -8,15 +10,23 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.HandlerInterceptor;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import com.gns.notification.domain.ApiTokenMapper;
+
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.time.LocalDateTime;
+import java.util.HexFormat;
+import java.util.Objects;
 
 @Component
 public class UserContextInterceptor implements HandlerInterceptor {
 
     private final UserMapper userMapper;
-    private final org.springframework.data.redis.core.StringRedisTemplate redisTemplate;
-    private final com.gns.notification.domain.ApiTokenMapper apiTokenMapper;
+    private final StringRedisTemplate redisTemplate;
+    private final ApiTokenMapper apiTokenMapper;
 
-    public UserContextInterceptor(UserMapper userMapper, org.springframework.data.redis.core.StringRedisTemplate redisTemplate, com.gns.notification.domain.ApiTokenMapper apiTokenMapper) {
+    public UserContextInterceptor(UserMapper userMapper, StringRedisTemplate redisTemplate, ApiTokenMapper apiTokenMapper) {
         this.userMapper = userMapper;
         this.redisTemplate = redisTemplate;
         this.apiTokenMapper = apiTokenMapper;
@@ -29,7 +39,7 @@ public class UserContextInterceptor implements HandlerInterceptor {
 
         if (StringUtils.hasText(authHeader) && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
-            
+
             // 1. Check Redis (Session Token)
             String key = "gns:token:" + token;
             String userIdStr = redisTemplate.opsForValue().get(key);
@@ -38,26 +48,26 @@ public class UserContextInterceptor implements HandlerInterceptor {
             } else {
                 // 2. Check DB (API Token)
                 String hashedToken = hashToken(token);
-                com.gns.notification.domain.ApiToken apiToken = apiTokenMapper.selectOne(
-                    new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.gns.notification.domain.ApiToken>()
-                        .eq(com.gns.notification.domain.ApiToken::getToken, hashedToken)
+                ApiToken apiToken = apiTokenMapper.selectOne(
+                        new LambdaQueryWrapper<ApiToken>()
+                                .eq(ApiToken::getToken, hashedToken)
                 );
-                
-                if (apiToken != null) {
-                    if (apiToken.getExpiresAt() != null && apiToken.getExpiresAt().isBefore(java.time.LocalDateTime.now())) {
-                         throw new UnauthorizedException("Token 已过期");
+
+                if (Objects.nonNull(apiToken)) {
+                    if (Objects.nonNull(apiToken.getExpiresAt()) && apiToken.getExpiresAt().isBefore(LocalDateTime.now())) {
+                        throw new UnauthorizedException("Token 已过期");
                     }
                     userId = apiToken.getUserId();
                 }
             }
         }
 
-        if (userId == null) {
-             throw new UnauthorizedException("未认证: 请提供有效的 Token");
+        if (Objects.isNull(userId)) {
+            throw new UnauthorizedException("未认证: 请提供有效的 Token");
         }
 
         User user = userMapper.selectById(userId);
-        if (user == null || user.getStatus() == null || user.getStatus() != 1) {
+        if (Objects.isNull(user) || Objects.isNull(user.getStatus()) || user.getStatus() != 1) {
             throw new UnauthorizedException("用户不存在或已被禁用");
         }
         UserContextHolder.set(new UserContext(user.getId(), user.getTeamId(), user.getRole()));
@@ -66,10 +76,10 @@ public class UserContextInterceptor implements HandlerInterceptor {
 
     private String hashToken(String rawToken) {
         try {
-            java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
             byte[] hashed = digest.digest(rawToken.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-            return java.util.HexFormat.of().formatHex(hashed);
-        } catch (java.security.NoSuchAlgorithmException e) {
+            return HexFormat.of().formatHex(hashed);
+        } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException("Unable to hash token", e);
         }
     }

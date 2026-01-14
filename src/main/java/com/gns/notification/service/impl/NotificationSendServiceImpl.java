@@ -1,18 +1,25 @@
 package com.gns.notification.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.gns.notification.domain.NotificationTask;
 import com.gns.notification.domain.NotificationTaskMapper;
 import com.gns.notification.dto.NotificationSendRequest;
 import com.gns.notification.dto.NotificationTaskResponse;
+import com.gns.notification.exception.RateLimitExceededException;
 import com.gns.notification.exception.UnauthorizedException;
 import com.gns.notification.security.UserContext;
 import com.gns.notification.security.UserContextHolder;
 import com.gns.notification.service.NotificationSendService;
 import com.gns.notification.service.NotificationTaskService;
+
 import java.time.Instant;
+import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.connection.stream.MapRecord;
 import org.springframework.data.redis.connection.stream.ObjectRecord;
@@ -31,7 +38,7 @@ public class NotificationSendServiceImpl implements NotificationSendService {
     private final RedisTemplate<String, Object> redisTemplate;
     private final String streamKey;
 
-    public NotificationSendServiceImpl(NotificationTaskService taskService,
+    public NotificationSendServiceImpl(@org.springframework.context.annotation.Lazy NotificationTaskService taskService,
                                        NotificationTaskMapper taskMapper,
                                        RedisTemplate<String, Object> redisTemplate,
                                        @Value("${app.notification.redis-stream-key}") String streamKey) {
@@ -44,18 +51,18 @@ public class NotificationSendServiceImpl implements NotificationSendService {
     @Override
     public NotificationTaskResponse send(NotificationSendRequest request) {
         UserContext ctx = Optional.ofNullable(UserContextHolder.get())
-            .orElseThrow(() -> new UnauthorizedException("用户未登录"));
+                .orElseThrow(() -> new UnauthorizedException("用户未登录"));
 
         NotificationTask task = taskMapper.selectOne(
-            new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<NotificationTask>()
-                .eq(NotificationTask::getTaskId, request.getTaskId())
+                new LambdaQueryWrapper<NotificationTask>()
+                        .eq(NotificationTask::getTaskId, request.getTaskId())
         );
-        if (task == null) {
+        if (Objects.isNull(task)) {
             throw new IllegalArgumentException("Task not found: " + request.getTaskId());
         }
         // 基础权限：管理员或同队/本人
         if (!ctx.isAdmin()) {
-            if (!ctx.isTeamAdmin() || (task.getTeamId() != null && !task.getTeamId().equals(ctx.getTeamId()))) {
+            if (!ctx.isTeamAdmin() || (Objects.nonNull(task.getTeamId()) && !task.getTeamId().equals(ctx.getTeamId()))) {
                 if (!task.getUserId().equals(ctx.getUserId())) {
                     throw new UnauthorizedException("没有权限发送该任务");
                 }
@@ -88,20 +95,20 @@ public class NotificationSendServiceImpl implements NotificationSendService {
             if (task.getMaxPerHour() != null && task.getMaxPerHour() > 0) {
                 Long count = redisTemplate.opsForValue().increment(hourKey);
                 if (count != null && count == 1) {
-                    redisTemplate.expire(hourKey, 1, java.util.concurrent.TimeUnit.HOURS);
+                    redisTemplate.expire(hourKey, 1, TimeUnit.HOURS);
                 }
                 if (count != null && count > task.getMaxPerHour()) {
-                    throw new com.gns.notification.exception.RateLimitExceededException("Rate limit exceeded (Hour): " + task.getMaxPerHour());
+                    throw new RateLimitExceededException("Rate limit exceeded (Hour): " + task.getMaxPerHour());
                 }
             }
 
             if (task.getMaxPerDay() != null && task.getMaxPerDay() > 0) {
                 Long count = redisTemplate.opsForValue().increment(dayKey);
                 if (count != null && count == 1) {
-                    redisTemplate.expire(dayKey, 24, java.util.concurrent.TimeUnit.HOURS);
+                    redisTemplate.expire(dayKey, 24, TimeUnit.HOURS);
                 }
                 if (count != null && count > task.getMaxPerDay()) {
-                    throw new com.gns.notification.exception.RateLimitExceededException("Rate limit exceeded (Day): " + task.getMaxPerDay());
+                    throw new RateLimitExceededException("Rate limit exceeded (Day): " + task.getMaxPerDay());
                 }
             }
         }
@@ -109,24 +116,29 @@ public class NotificationSendServiceImpl implements NotificationSendService {
 
 
     private void checkSilentMode(NotificationTask task) {
-        if (task.getSilentStart() != null && task.getSilentEnd() != null) {
+        if (Objects.nonNull(task.getSilentStart()) && Objects.nonNull(task.getSilentEnd())) {
             java.time.LocalTime now = java.time.LocalTime.now();
-            boolean isSilent = false;
-            if (task.getSilentStart().isBefore(task.getSilentEnd())) {
-                // Same day, e.g., 09:00 to 18:00
-                if (!now.isBefore(task.getSilentStart()) && !now.isAfter(task.getSilentEnd())) {
-                    isSilent = true;
-                }
-            } else {
-                // Cross day, e.g., 22:00 to 07:00
-                if (!now.isBefore(task.getSilentStart()) || !now.isAfter(task.getSilentEnd())) {
-                    isSilent = true;
-                }
-            }
+            boolean isSilent = isSilent(task, now);
 
             if (isSilent) {
-                throw new com.gns.notification.exception.RateLimitExceededException("Silent Mode is active (" + task.getSilentStart() + " - " + task.getSilentEnd() + ")");
+                throw new RateLimitExceededException("Silent Mode is active (" + task.getSilentStart() + " - " + task.getSilentEnd() + ")");
             }
         }
+    }
+
+    private static boolean isSilent(NotificationTask task, LocalTime now) {
+        boolean isSilent = false;
+        if (task.getSilentStart().isBefore(task.getSilentEnd())) {
+            // Same day, e.g., 09:00 to 18:00
+            if (!now.isBefore(task.getSilentStart()) && !now.isAfter(task.getSilentEnd())) {
+                isSilent = true;
+            }
+        } else {
+            // Cross day, e.g., 22:00 to 07:00
+            if (!now.isBefore(task.getSilentStart()) || !now.isAfter(task.getSilentEnd())) {
+                isSilent = true;
+            }
+        }
+        return isSilent;
     }
 }

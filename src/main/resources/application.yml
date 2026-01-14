@@ -43,6 +43,8 @@ app:
     redis-stream-key: gns:notifications
     consumer-group: gns-workers
     consumer-name: gns-worker-1
+  scheduler:
+    type: redis # Options: db, redis
 logging:
   level:
     root: INFO

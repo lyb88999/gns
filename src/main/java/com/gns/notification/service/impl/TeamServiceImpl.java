@@ -13,6 +13,7 @@ import com.gns.notification.security.UserContext;
 import com.gns.notification.security.UserContextHolder;
 import com.gns.notification.service.TeamService;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -74,7 +75,7 @@ public class TeamServiceImpl implements TeamService {
 
     private Team findTeam(Long id) {
         Team team = teamMapper.selectById(id);
-        if (team == null) {
+        if (Objects.isNull(team)) {
             throw new IllegalArgumentException("Team not found: " + id);
         }
         return team;
@@ -82,7 +83,7 @@ public class TeamServiceImpl implements TeamService {
 
     private void ensureAdmin() {
         UserContext context = UserContextHolder.get();
-        if (context == null) {
+        if (Objects.isNull(context)) {
             throw new UnauthorizedException("用户未登录");
         }
         if (!context.isAdmin()) {

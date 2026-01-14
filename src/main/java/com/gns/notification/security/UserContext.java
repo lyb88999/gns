@@ -1,5 +1,8 @@
 package com.gns.notification.security;
 
+import lombok.Getter;
+
+@Getter
 public class UserContext {
 
     private final Long userId;
@@ -10,18 +13,6 @@ public class UserContext {
         this.userId = userId;
         this.teamId = teamId;
         this.role = role;
-    }
-
-    public Long getUserId() {
-        return userId;
-    }
-
-    public Long getTeamId() {
-        return teamId;
-    }
-
-    public String getRole() {
-        return role;
     }
 
     public boolean isAdmin() {
