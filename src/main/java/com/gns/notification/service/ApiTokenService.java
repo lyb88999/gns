@@ -9,7 +9,7 @@ public interface ApiTokenService {
 
     ApiTokenResponse createToken(ApiTokenRequest request);
 
-    PageResult<ApiTokenResponse> listTokens(Long userId, Pageable pageable);
+    PageResult<ApiTokenResponse> listTokens(Long userId, Pageable pageable, String search);
 
     ApiTokenResponse getToken(Long id);
 

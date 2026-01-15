@@ -12,10 +12,15 @@ const dialogVisible = ref(false)
 const form = ref({
   name: '',
 })
+const searchQuery = ref('')
 
 const fetchTokens = async () => {
     try {
-        const res = await axios.get('/tokens')
+        const res = await axios.get('/tokens', {
+            params: {
+                search: searchQuery.value || undefined
+            }
+        })
         tokens.value = res.content || []
     } catch (error) {
         console.error('Failed to fetch tokens', error)
@@ -98,7 +103,16 @@ onMounted(() => {
     <!-- Enhanced Card UI -->
     <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm dark:shadow-none overflow-hidden flex-1 flex flex-col transition-all duration-300">
         <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between bg-gray-50/50 dark:bg-gray-800/50">
-            <el-input :placeholder="t('common.search')" :prefix-icon="Search" class="w-72" size="large" />
+            <el-input 
+                v-model="searchQuery" 
+                :placeholder="t('common.search')" 
+                :prefix-icon="Search" 
+                class="w-72" 
+                size="large" 
+                clearable
+                @keyup.enter="fetchTokens"
+                @clear="fetchTokens"
+            />
         </div>
         
         <el-table :data="tokens" 

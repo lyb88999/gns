@@ -13,7 +13,7 @@ public interface NotificationTaskService {
 
     NotificationTaskResponse getTask(String taskId);
 
-    PageResult<NotificationTaskResponse> listTasks(Pageable pageable);
+    PageResult<NotificationTaskResponse> listTasks(Pageable pageable, String search);
 
     void deleteTask(String taskId);
 

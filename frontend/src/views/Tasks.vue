@@ -13,6 +13,7 @@ const tasks = ref([])
 const dialogVisible = ref(false)
 const isEdit = ref(false)
 const currentId = ref(null)
+const searchQuery = ref('')
 
 const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text).then(() => {
@@ -52,7 +53,11 @@ const form = ref({
 
 const fetchTasks = async () => {
     try {
-        const res = await axios.get('/tasks')
+        const res = await axios.get('/tasks', {
+            params: {
+                search: searchQuery.value || undefined
+            }
+        })
         // Backend returns PageResult { content: [], ... }
         tasks.value = res.content || []
     } catch (error) {
@@ -172,7 +177,16 @@ onMounted(() => {
     <!-- Enhanced Card UI for Table -->
     <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm dark:shadow-none overflow-hidden flex-1 flex flex-col transition-all duration-300">
         <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between bg-gray-50/50 dark:bg-gray-800/50">
-            <el-input :placeholder="t('common.search')" :prefix-icon="Search" class="w-72" size="large" />
+            <el-input 
+                v-model="searchQuery" 
+                :placeholder="t('common.search')" 
+                :prefix-icon="Search" 
+                class="w-72" 
+                size="large" 
+                clearable
+                @keyup.enter="fetchTasks"
+                @clear="fetchTasks"
+            />
         </div>
         
         <el-table :data="tasks" 
@@ -201,13 +215,19 @@ onMounted(() => {
             </el-table-column>
             <el-table-column prop="description" :label="t('tasks.description')" />
             <el-table-column prop="cronExpression" :label="t('tasks.cron')" />
-            <el-table-column prop="channel" :label="t('tasks.channels')">
+            <el-table-column prop="channel" :label="t('tasks.channels')" min-width="180">
                 <template #default="{ row }">
-                    <div class="flex gap-1">
-                        <el-tag v-for="c in row.channels" :key="c" size="small" effect="plain" class="dark:bg-gray-900/50">{{ c }}</el-tag>
+                    <div class="flex gap-1 items-center">
+                        <el-tag v-for="c in row.channels.slice(0, 1)" :key="c" size="small" effect="plain" class="dark:bg-gray-900/50">{{ c }}</el-tag>
+                        <el-tooltip 
+                            v-if="row.channels.length > 1"
+                            :content="row.channels.slice(1).join(', ')" 
+                            placement="top"
+                        >
+                            <el-tag size="small" type="info" effect="plain" class="cursor-pointer dark:bg-gray-900/50">+{{ row.channels.length - 1 }}</el-tag>
+                        </el-tooltip>
                     </div>
                 </template>
-
             </el-table-column>
             <el-table-column :label="t('tasks.lastRun')" width="160">
                 <template #default="{ row }">

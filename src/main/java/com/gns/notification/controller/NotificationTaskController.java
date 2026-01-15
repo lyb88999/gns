@@ -42,8 +42,9 @@ public class NotificationTaskController {
     @GetMapping
     public ResponseEntity<PageResult<NotificationTaskResponse>> listTasks(
         @RequestParam(defaultValue = "0") int page,
-        @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(taskService.listTasks(PageRequest.of(page, size)));
+        @RequestParam(defaultValue = "10") int size,
+        @RequestParam(required = false) String search) {
+        return ResponseEntity.ok(taskService.listTasks(PageRequest.of(page, size), search));
     }
 
     @DeleteMapping("/{taskId}")

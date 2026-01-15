@@ -95,7 +95,7 @@ onMounted(() => {
                      <el-option :label="t('common.success')" value="SUCCESS" />
                      <el-option :label="t('common.failed')" value="FAILED" />
                      <el-option :label="t('common.blocked')" value="BLOCKED" />
-                     <el-option :label="'Skipped'" value="SKIPPED" />
+                     <el-option :label="t('common.skipped')" value="SKIPPED" />
                 </el-select>
            </div>
            <div class="text-sm text-gray-500">{{ t('logs.showingLast7Days') }}</div>
@@ -138,7 +138,7 @@ onMounted(() => {
                         {{ 
                             row.status === 'SUCCESS' ? t('common.success') : 
                             (row.status === 'blocked' || row.status === 'BLOCKED' ? t('common.blocked') : 
-                            (row.status === 'skipped' || row.status === 'SKIPPED' ? 'Skipped' : t('common.failed')))
+                            (row.status === 'skipped' || row.status === 'SKIPPED' ? t('common.skipped') : t('common.failed')))
                         }}
                     </el-tag>
                 </template>
@@ -184,7 +184,7 @@ onMounted(() => {
                     {{ 
                          currentLog.status === 'SUCCESS' ? t('common.success') : 
                          (currentLog.status === 'blocked' || currentLog.status === 'BLOCKED' ? t('common.blocked') : 
-                         (currentLog.status === 'skipped' || currentLog.status === 'SKIPPED' ? 'Skipped' : t('common.failed')))
+                         (currentLog.status === 'skipped' || currentLog.status === 'SKIPPED' ? t('common.skipped') : t('common.failed')))
                     }}
                 </el-tag>
             </el-descriptions-item>

@@ -16,6 +16,8 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
+    out-of-order: true
+    repair-on-migrate: true
   jackson:
     default-property-inclusion: non_null
   mail:

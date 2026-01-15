@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 @Service
 @Transactional
@@ -54,9 +55,14 @@ public class ApiTokenServiceImpl implements ApiTokenService {
     }
 
     @Override
-    public PageResult<ApiTokenResponse> listTokens(Long userId, Pageable pageable) {
+    public PageResult<ApiTokenResponse> listTokens(Long userId, Pageable pageable, String search) {
         UserContext context = UserContextHolder.requireUser();
         LambdaQueryWrapper<ApiToken> wrapper = new LambdaQueryWrapper<>();
+        
+        if (StringUtils.hasText(search)) {
+            wrapper.like(ApiToken::getName, search);
+        }
+
         if (context.isAdmin()) {
             if (Objects.nonNull(userId)) {
                 wrapper.eq(ApiToken::getUserId, userId);

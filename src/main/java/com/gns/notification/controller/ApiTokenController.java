@@ -35,8 +35,9 @@ public class ApiTokenController {
     public ResponseEntity<PageResult<ApiTokenResponse>> listTokens(
         @RequestParam(required = false) Long userId,
         @RequestParam(defaultValue = "0") int page,
-        @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(apiTokenService.listTokens(userId, PageRequest.of(page, size)));
+        @RequestParam(defaultValue = "10") int size,
+        @RequestParam(required = false) String search) {
+        return ResponseEntity.ok(apiTokenService.listTokens(userId, PageRequest.of(page, size), search));
     }
 
     @GetMapping("/{id}")

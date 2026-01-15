@@ -21,7 +21,7 @@ const isActive = (path) => route.path === path
     <!-- Sidebar -->
     <div class="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex-shrink-0 flex flex-col transition-colors duration-300">
       <div class="h-16 flex items-center px-6 border-b border-gray-200 dark:border-gray-700">
-        <el-icon class="text-purple-600 dark:text-purple-500 text-xl mr-2"><Bell /></el-icon>
+        <img src="/logo.png" alt="Logo" class="w-8 h-8 mr-2 object-contain" />
         <span class="font-bold text-lg">GNS Console</span>
       </div>
       

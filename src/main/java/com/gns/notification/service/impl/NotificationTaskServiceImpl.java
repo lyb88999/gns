@@ -89,9 +89,9 @@ public class NotificationTaskServiceImpl implements NotificationTaskService {
     }
 
     @Override
-    public PageResult<NotificationTaskResponse> listTasks(Pageable pageable) {
+    public PageResult<NotificationTaskResponse> listTasks(Pageable pageable, String search) {
         Page<NotificationTask> page = new Page<>(pageable.getPageNumber() + 1L, pageable.getPageSize());
-        Page<NotificationTask> result = mapper.selectPage(page, scopedQuery());
+        Page<NotificationTask> result = mapper.selectPage(page, scopedQuery(search));
         List<NotificationTaskResponse> responses = result.getRecords().stream()
             .map(this::toResponse)
             .collect(Collectors.toList());
@@ -207,9 +207,18 @@ public class NotificationTaskServiceImpl implements NotificationTaskService {
         throw new AccessDeniedException("没有权限访问任务: " + entity.getTaskId());
     }
 
-    private LambdaQueryWrapper<NotificationTask> scopedQuery() {
+    private LambdaQueryWrapper<NotificationTask> scopedQuery(String search) {
         UserContext context = requireUser();
         LambdaQueryWrapper<NotificationTask> wrapper = new LambdaQueryWrapper<>();
+        
+        if (StringUtils.hasText(search)) {
+            wrapper.and(w -> w.like(NotificationTask::getName, search)
+                .or()
+                .like(NotificationTask::getDescription, search)
+                .or()
+                .like(NotificationTask::getTaskId, search));
+        }
+
         if (context.isAdmin()) {
             return wrapper;
         }
