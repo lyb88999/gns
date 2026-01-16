@@ -43,15 +43,14 @@ public class RedisTaskScheduler implements TaskSchedulerEngine {
         // Calculate next run
         try {
             CronExpression cron = CronExpression.parse(task.getCronExpression());
-            LocalDateTime now = LocalDateTime.now();
+            // Fix: Use Asia/Shanghai time for scheduling
+            java.time.ZoneId zoneId = java.time.ZoneId.of("Asia/Shanghai");
+            LocalDateTime now = LocalDateTime.now(zoneId);
             LocalDateTime next = cron.next(now);
             
             if (Objects.nonNull(next)) {
-                // Determine score (epoch milli)
-                double score; // Assuming default +8 or system default
-                // Better use configurable zone, currently system default likely
-                // Use system default offset
-                score = next.toInstant(ZoneOffset.systemDefault().getRules().getOffset(next)).toEpochMilli();
+                // Determine score (epoch milli) using specific zone offset
+                double score = next.toInstant(zoneId.getRules().getOffset(next)).toEpochMilli();
                 
                 redisTemplate.opsForZSet().add(SCHEDULER_KEY, task.getTaskId(), score);
                 

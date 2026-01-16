@@ -1,4 +1,4 @@
-package com.gns.notification.service;
+package com.gns.notification.service.sender;
 
 import java.util.List;
 

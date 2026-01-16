@@ -1,4 +1,6 @@
-package com.gns.notification.service;
+package com.gns.notification.service.impl;
+import com.gns.notification.service.sender.DingTalkSender;
+import lombok.extern.slf4j.Slf4j;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
@@ -17,17 +19,17 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @Service
-public class DingTalkSender {
+public class DingTalkSenderImpl implements DingTalkSender {
+
 
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
 
-    public DingTalkSender(ObjectMapper objectMapper) {
+    public DingTalkSenderImpl(ObjectMapper objectMapper, HttpClient httpClient) {
         this.objectMapper = objectMapper;
-        this.httpClient = HttpClient.newBuilder()
-                .connectTimeout(Duration.ofSeconds(10))
-                .build();
+        this.httpClient = httpClient;
     }
 
     public void send(String webhook, String secret, String content) {
@@ -66,7 +68,7 @@ public class DingTalkSender {
             httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                     .thenAccept(response -> {
                         if (response.statusCode() != 200) {
-                            System.err.println("Failed to send DingTalk message: " + response.body());
+                            log.error("Failed to send DingTalk message: {}", response.body());
                         }
                     });
 

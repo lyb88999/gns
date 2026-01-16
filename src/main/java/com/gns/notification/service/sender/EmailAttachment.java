@@ -1,4 +1,4 @@
-package com.gns.notification.service;
+package com.gns.notification.service.sender;
 
 public class EmailAttachment {
 
