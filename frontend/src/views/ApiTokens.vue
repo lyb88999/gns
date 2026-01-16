@@ -27,9 +27,10 @@ const fetchTokens = async () => {
     }
 }
 
+import { copyText } from '../utils/clipboard'
+
 const handleCopy = (token) => {
-    navigator.clipboard.writeText(token)
-    ElMessage.success(t('common.copied'))
+    copyText(token, t)
 }
 
 const handleRevoke = (row) => {
@@ -73,8 +74,7 @@ const handleSubmit = async () => {
                 confirmButtonText: t('tokens.copyClose'),
                 dangerouslyUseHTMLString: true,
                 callback: () => {
-                    navigator.clipboard.writeText(res.token)
-                    ElMessage.success(t('tokens.tokenCopied'))
+                    copyText(res.token, t)
                 }
             }
         )

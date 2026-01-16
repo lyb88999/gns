@@ -15,10 +15,10 @@ const isEdit = ref(false)
 const currentId = ref(null)
 const searchQuery = ref('')
 
+import { copyText } from '../utils/clipboard'
+
 const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text).then(() => {
-        ElMessage.success(t('tasks.copySuccess'))
-    })
+    copyText(text, t)
 }
 
 const handleRunNow = async (row) => {
