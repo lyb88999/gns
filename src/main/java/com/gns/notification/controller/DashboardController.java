@@ -18,7 +18,7 @@ public class DashboardController {
     }
 
     @GetMapping("/stats")
-    public ResponseEntity<DashboardStatsResponse> getStats() {
-        return ResponseEntity.ok(dashboardService.getStats());
+    public ResponseEntity<DashboardStatsResponse> getStats(@org.springframework.web.bind.annotation.RequestParam(required = false, defaultValue = "5m") String granularity) {
+        return ResponseEntity.ok(dashboardService.getStats(granularity));
     }
 }
