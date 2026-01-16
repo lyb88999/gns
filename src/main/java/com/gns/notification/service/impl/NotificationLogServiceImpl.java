@@ -26,8 +26,18 @@ public class NotificationLogServiceImpl implements NotificationLogService {
 
     @Override
     public PageResult<NotificationLogResponse> listLogs(Pageable pageable, String status, String search) {
+        // Security Check
+        com.gns.notification.security.UserContext ctx = com.gns.notification.security.UserContextHolder.get();
+        if (Objects.isNull(ctx)) {
+             throw new com.gns.notification.exception.UnauthorizedException("User context is missing");
+        }
+
         Page<NotificationLog> page = new Page<>(pageable.getPageNumber() + 1, pageable.getPageSize());
         LambdaQueryWrapper<NotificationLog> wrapper = new LambdaQueryWrapper<>();
+
+        if (!ctx.isAdmin()) {
+             wrapper.eq(NotificationLog::getUserId, ctx.getUserId());
+        }
 
         if (StringUtils.hasText(status) && !"all".equalsIgnoreCase(status)) {
             wrapper.eq(NotificationLog::getStatus, status);

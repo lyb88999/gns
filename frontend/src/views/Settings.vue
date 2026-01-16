@@ -25,7 +25,7 @@ const handleLogout = () => {
   <div class="h-full flex flex-col p-8 bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
     <div class="mb-8">
         <h1 class="text-2xl font-bold mb-1 text-gray-900 dark:text-white transition-colors">{{ t('common.settings') }}</h1>
-        <p class="text-gray-500 dark:text-gray-400 transition-colors">{{ t('dashboard.title') }} configuration and preferences.</p>
+        <p class="text-gray-500 dark:text-gray-400 transition-colors">{{ t('settings.subtitle') }}</p>
     </div>
 
     <!-- Removed max-w-3xl to use full width -->

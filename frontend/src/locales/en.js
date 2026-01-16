@@ -60,11 +60,21 @@ export default {
         volume24h: 'Notification Volume Over 24h',
         recentActivity: 'Recent Activity',
         vsLastWeek: 'vs last week',
-        runningSmoothly: 'All systems operational'
+        runningSmoothly: 'All systems operational',
+        channelDistribution: 'Channel Distribution',
+        statusDistribution: 'Status Distribution',
+        recentLogs: 'Recent Live Logs',
+        topErrors: 'Top 5 Errors',
+        viewAll: 'View All',
+        noErrors: 'No errors recorded',
+        realtime: '(Realtime)',
+        systemHealthy: 'System Healthy',
+        '5m': '5 Min',
+        '1h': '1 Hour'
     },
     tasks: {
         title: 'Task Management',
-        subtitle: 'Manage your notification rules and templates.',
+        subtitle: 'Manage your notification rules and templates',
         createButton: 'Create Task',
         createDialog: 'Create Notification Task',
         name: 'Task Name',
@@ -112,6 +122,7 @@ export default {
         orUseAppConfig: 'OR Use App Configuration'
     },
     logs: {
+        subtitle: 'Monitor notification delivery history',
         showingLast7Days: 'Showing last 7 days',
         filterByStatus: 'Filter by Status',
         recipient: 'Recipient',
@@ -119,6 +130,7 @@ export default {
         error: 'Error'
     },
     settings: {
+        subtitle: 'Configuration and preferences',
         appearance: 'Appearance',
         darkMode: 'Dark Mode',
         darkModeDesc: 'Enable dark theme for the console',
@@ -130,7 +142,7 @@ export default {
     },
     tokens: {
         title: 'API Tokens',
-        subtitle: 'Manage access tokens for external systems.',
+        subtitle: 'Manage access tokens for external systems',
         createButton: 'Generate Token',
         createDialog: 'Generate New API Token',
         name: 'Token Name',
@@ -146,7 +158,7 @@ export default {
     },
     teams: {
         title: 'Team Management',
-        subtitle: 'Manage your team members and permissions.',
+        subtitle: 'Manage your team members and permissions',
         createButton: 'Add Member',
         createDialog: 'Add Team Member',
         name: 'Name',

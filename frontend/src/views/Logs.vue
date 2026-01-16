@@ -66,7 +66,7 @@ onMounted(() => {
     <div class="mb-8 flex justify-between items-end">
         <div>
             <h1 class="text-2xl font-bold mb-1 text-gray-900 dark:text-white transition-colors">{{ t('common.logs') }}</h1>
-            <p class="text-gray-500 dark:text-gray-400 transition-colors">Monitor notification delivery history.</p>
+            <p class="text-gray-500 dark:text-gray-400 transition-colors">{{ t('logs.subtitle') }}</p>
         </div>
         <el-button :icon="Refresh" circle @click="fetchLogs" :loading="loading" />
     </div>

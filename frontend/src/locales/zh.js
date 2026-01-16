@@ -60,11 +60,21 @@ export default {
         volume24h: '24小时通知量',
         recentActivity: '最近活动',
         vsLastWeek: '较上周',
-        runningSmoothly: '系统运行正常'
+        runningSmoothly: '系统运行正常',
+        channelDistribution: '通知渠道分布',
+        statusDistribution: '发送状态统计',
+        recentLogs: '实时发送记录',
+        topErrors: '高频错误 TOP5',
+        viewAll: '查看全部',
+        noErrors: '暂无错误记录',
+        realtime: '(实时)',
+        systemHealthy: '系统健康',
+        '5m': '5分钟',
+        '1h': '1小时'
     },
     tasks: {
         title: '任务管理',
-        subtitle: '管理您的通知规则与模板。',
+        subtitle: '管理您的通知规则与模板',
         createButton: '新建任务',
         createDialog: '新建通知任务',
         name: '任务名称',
@@ -112,6 +122,7 @@ export default {
         orUseAppConfig: '或者使用应用配置 (更强大)'
     },
     logs: {
+        subtitle: '监控通知投递历史',
         showingLast7Days: '展示最近 7 天记录',
         filterByStatus: '按状态筛选',
         recipient: '接收者',
@@ -119,6 +130,7 @@ export default {
         error: '错误信息'
     },
     settings: {
+        subtitle: '系统配置与偏好设置',
         appearance: '外观设置',
         darkMode: '深色模式',
         darkModeDesc: '开启控制台深色主题',
@@ -130,7 +142,7 @@ export default {
     },
     tokens: {
         title: 'API 令牌',
-        subtitle: '管理外部系统的访问令牌。',
+        subtitle: '管理外部系统的访问令牌',
         createButton: '生成令牌',
         createDialog: '生成新 API 令牌',
         name: '令牌名称',
@@ -146,7 +158,7 @@ export default {
     },
     teams: {
         title: '团队管理',
-        subtitle: '管理团队成员及其权限。',
+        subtitle: '管理团队成员及其权限',
         createButton: '添加成员',
         createDialog: '添加团队成员',
         name: '姓名',
