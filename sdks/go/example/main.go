@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"gns-sdk/gns"
+	"github.com/lyb88999/gns/sdks/go/gns"
 )
 
 func main() {
