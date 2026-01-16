@@ -42,7 +42,12 @@ const form = ref({
   messageTemplate: '',
   customData: {
       dingTalkWebhook: '',
-      dingTalkSecret: ''
+      dingTalkSecret: '',
+      wechatCorpId: '',
+      wechatCorpSecret: '',
+      wechatAgentId: '',
+      wechatToUser: '',
+      wechatWebhook: ''
   },
   rateLimitEnabled: false,
   maxPerHour: 0,
@@ -88,7 +93,15 @@ const handleEdit = (row) => {
         cronExpression: row.cronExpression || '',
         triggerType: row.triggerType || 'cron',
         messageTemplate: row.messageTemplate || '',
-        customData: row.customData || { dingTalkWebhook: '', dingTalkSecret: '' },
+        customData: row.customData || { 
+            dingTalkWebhook: '', 
+            dingTalkSecret: '',
+            wechatCorpId: '',
+            wechatCorpSecret: '',
+            wechatAgentId: '',
+            wechatToUser: '',
+            wechatWebhook: ''
+        },
         rateLimitEnabled: row.rateLimitEnabled || false,
         maxPerHour: row.maxPerHour || 0,
         maxPerDay: row.maxPerDay || 0,
@@ -127,7 +140,15 @@ const handleCreate = () => {
         cronExpression: '', 
         messageTemplate: '', 
         triggerType: 'cron',
-        customData: { dingTalkWebhook: '', dingTalkSecret: '' },
+        customData: { 
+            dingTalkWebhook: '', 
+            dingTalkSecret: '',
+            wechatCorpId: '',
+            wechatCorpSecret: '',
+            wechatAgentId: '',
+            wechatToUser: '',
+            wechatWebhook: ''
+        },
         rateLimitEnabled: false,
         maxPerHour: 0,
         maxPerDay: 0,
@@ -292,6 +313,36 @@ onMounted(() => {
                 <el-form-item :label="t('tasks.dingTalkSecret')">
                     <el-input v-model="form.customData.dingTalkSecret" placeholder="SEC..." show-password />
                 </el-form-item>
+            </div>
+
+            <div v-if="form.channels.includes('WeChat')" class="p-4 mb-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
+                <p class="mb-3 text-sm font-bold text-gray-700 dark:text-gray-300">{{ t('tasks.wechatConfig') }}</p>
+                
+                <el-form-item :label="t('tasks.wechatWebhook')">
+                    <el-input v-model="form.customData.wechatWebhook" placeholder="https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=..." />
+                    <div class="text-xs text-gray-400 mt-1">{{ t('tasks.wechatWebhookHint') }}</div>
+                </el-form-item>
+                
+                <div class="relative flex py-5 items-center">
+                    <div class="flex-grow border-t border-gray-300 dark:border-gray-600"></div>
+                    <span class="flex-shrink-0 mx-4 text-gray-400 text-xs">{{ t('tasks.orUseAppConfig') }}</span>
+                    <div class="flex-grow border-t border-gray-300 dark:border-gray-600"></div>
+                </div>
+
+                <el-form-item :label="t('tasks.wechatCorpId')">
+                    <el-input v-model="form.customData.wechatCorpId" placeholder="ww..." />
+                </el-form-item>
+                <el-form-item :label="t('tasks.wechatCorpSecret')">
+                    <el-input v-model="form.customData.wechatCorpSecret" placeholder="Secret..." show-password />
+                </el-form-item>
+                <div class="grid grid-cols-2 gap-4">
+                    <el-form-item :label="t('tasks.wechatAgentId')">
+                        <el-input v-model="form.customData.wechatAgentId" placeholder="1000002" />
+                    </el-form-item>
+                    <el-form-item :label="t('tasks.wechatToUser')">
+                        <el-input v-model="form.customData.wechatToUser" placeholder="@all" />
+                    </el-form-item>
+                </div>
             </div>
             <el-form-item :label="t('tasks.messageTemplate')">
                 <el-input 

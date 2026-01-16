@@ -117,7 +117,8 @@ public class NotificationSendServiceImpl implements NotificationSendService {
 
     private void checkSilentMode(NotificationTask task) {
         if (Objects.nonNull(task.getSilentStart()) && Objects.nonNull(task.getSilentEnd())) {
-            java.time.LocalTime now = java.time.LocalTime.now();
+            // Fix: Use Asia/Shanghai timezone to match user expectation
+            LocalTime now = java.time.LocalTime.now(java.time.ZoneId.of("Asia/Shanghai"));
             boolean isSilent = isSilent(task, now);
 
             if (isSilent) {

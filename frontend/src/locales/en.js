@@ -101,7 +101,15 @@ export default {
         silentEnd: 'Silent End',
         dingTalkConfig: 'DingTalk Configuration',
         dingTalkWebhook: 'Webhook URL',
-        dingTalkSecret: 'Secret (Optional)'
+        dingTalkSecret: 'Secret (Optional)',
+        wechatConfig: 'WeChat Work Configuration',
+        wechatCorpId: 'Corp ID',
+        wechatCorpSecret: 'Corp Secret',
+        wechatAgentId: 'Agent ID',
+        wechatToUser: 'To User (Optional)',
+        wechatWebhook: 'Webhook URL (Group Robot)',
+        wechatWebhookHint: 'If Webhook URL is provided, it will be used instead of App config.',
+        orUseAppConfig: 'OR Use App Configuration'
     },
     logs: {
         showingLast7Days: 'Showing last 7 days',

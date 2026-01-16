@@ -101,7 +101,15 @@ export default {
         silentEnd: '静默结束',
         dingTalkConfig: '钉钉配置',
         dingTalkWebhook: 'Webhook 地址',
-        dingTalkSecret: '加签密钥 (可选)'
+        dingTalkSecret: '加签密钥 (可选)',
+        wechatConfig: '企业微信配置',
+        wechatCorpId: '企业 ID (CorpId)',
+        wechatCorpSecret: '应用密钥 (Secret)',
+        wechatAgentId: '应用 ID (AgentId)',
+        wechatToUser: '接收用户 (可选, 默认为 @all)',
+        wechatWebhook: '群机器人 Webhook',
+        wechatWebhookHint: '如果填写了 Webhook，将优先使用机器人模式发送（仅支持发到群）。',
+        orUseAppConfig: '或者使用应用配置 (更强大)'
     },
     logs: {
         showingLast7Days: '展示最近 7 天记录',

@@ -5,19 +5,18 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gns.notification.domain.*;
 import com.gns.notification.enums.NotificationStatus;
-import com.gns.notification.service.DingTalkSender;
-import com.gns.notification.service.EmailAttachment;
-import com.gns.notification.service.EmailSender;
 import com.gns.notification.service.NotificationWorkerService;
+import com.gns.notification.service.strategy.DispatchResult;
+import com.gns.notification.service.strategy.NotificationChannelStrategy;
 import jakarta.annotation.PostConstruct;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,7 +29,6 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import static java.util.Collections.emptyMap;
 
 @Service
 public class NotificationWorkerServiceImpl implements NotificationWorkerService {
@@ -40,33 +38,31 @@ public class NotificationWorkerServiceImpl implements NotificationWorkerService 
     private final RedisTemplate<String, Object> redisTemplate;
     private final NotificationTaskMapper taskMapper;
     private final UserMapper userMapper;
-    private final EmailSender emailSender;
+    private final NotificationLogMapper tableLogMapper;
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final String streamKey;
     private final String consumerGroup;
     private final String consumerName;
 
-    private final DingTalkSender dingTalkSender;
-    private final NotificationLogMapper tableLogMapper;
+    private final Map<String, NotificationChannelStrategy> strategyMap;
 
     public NotificationWorkerServiceImpl(RedisTemplate<String, Object> redisTemplate,
                                          NotificationTaskMapper taskMapper,
                                          UserMapper userMapper,
-                                         EmailSender emailSender,
-                                         DingTalkSender dingTalkSender,
                                          NotificationLogMapper tableLogMapper,
+                                         List<NotificationChannelStrategy> strategies,
                                          @Value("${app.notification.redis-stream-key}") String streamKey,
                                          @Value("${app.notification.consumer-group}") String consumerGroup,
                                          @Value("${app.notification.consumer-name}") String consumerName) {
         this.redisTemplate = redisTemplate;
         this.taskMapper = taskMapper;
         this.userMapper = userMapper;
-        this.emailSender = emailSender;
-        this.dingTalkSender = dingTalkSender;
         this.tableLogMapper = tableLogMapper;
         this.streamKey = streamKey;
         this.consumerGroup = consumerGroup;
         this.consumerName = consumerName;
+        this.strategyMap = strategies.stream()
+                .collect(Collectors.toMap(NotificationChannelStrategy::getChannelName, Function.identity()));
     }
 
     @PostConstruct
@@ -110,53 +106,48 @@ public class NotificationWorkerServiceImpl implements NotificationWorkerService 
         }
         Long userId = value.get("userId") instanceof Number ? ((Number) value.get("userId")).longValue() : null;
         User user = Objects.isNull(userId) ? null : userMapper.selectById(userId);
-        if (Objects.isNull(user) || Objects.isNull(user.getEmail())) {
-            log.warn("[Worker] user or email missing for record {} userId={}", recordId, userId);
-            return;
+        if (Objects.isNull(user)) {
+             // Create a dummy user context if missing, or log warn. 
+             // Strategies might not strictly need User entity if receivers are in payload.
+             // But existing logic checked user.getEmail().
+             if (Objects.nonNull(userId)) {
+                 log.warn("[Worker] user not found id={}", userId);
+             }
+             user = new User(); // Avoid NPE in strategies
         }
+
+        log.info("[Worker] Processing recordId={} taskId={}", recordId, taskId);
 
         Map<String, Object> data = safeMap(value.get("data"));
-        String subject = Objects.isNull(data.getOrDefault("title", task.getName()))
-            ? task.getName()
-            : String.valueOf(data.getOrDefault("title", task.getName()));
+        // Inject attachments into data so EmailStrategy can find it
+        if (value.containsKey("attachments")) {
+            Object attachments = value.get("attachments");
+            if (attachments instanceof String) {
+                try {
+                    attachments = objectMapper.readValue((String) attachments, List.class);
+                } catch (Exception e) {
+                   log.warn("[Worker] failed to parse attachments JSON", e);
+                }
+            }
+            data.put("attachments", attachments);
+        }
+        
         String rendered = renderTemplate(task.getMessageTemplate(), data);
 
-        // 1. Email (Legacy)
-        if (Objects.nonNull(task.getChannels()) && task.getChannels().contains("Email")) {
-             boolean html = rendered.contains("<html") || rendered.contains("<body");
-             List<String> receivers = resolveReceivers(data, user.getEmail());
-             List<EmailAttachment> attachments = parseAttachments(value.get("attachments"));
-
-             for (String receiver : receivers) {
-                 try {
-                     emailSender.send(receiver, subject, rendered, html, attachments);
-                     saveLog(task, "Email", receiver, NotificationStatus.SUCCESS.getValue(), null);
-                 } catch (Exception e) {
-                     e.printStackTrace();
-                     saveLog(task, "Email", receiver, NotificationStatus.FAILED.getValue(), e.getMessage());
-                 }
-             }
-        }
-
-        // 2. DingTalk
-        if (Objects.nonNull(task.getChannels()) && task.getChannels().contains("DingTalk")) {
-             dispatchDingTalk(task, rendered);
-        }
-    }
-
-    private void dispatchDingTalk(NotificationTask task, String content) {
-        if (Objects.isNull(task.getCustomData())) {
-            return;
-        }
-        String webhook = (String) task.getCustomData().get("dingTalkWebhook");
-        String secret = (String) task.getCustomData().get("dingTalkSecret");
-        if (Objects.nonNull(webhook)) {
-            try {
-                dingTalkSender.send(webhook, secret, content);
-                saveLog(task, "DingTalk", webhook, NotificationStatus.SUCCESS.getValue(), null);
-            } catch (Exception e) {
-                e.printStackTrace(); // Log error for debugging
-                saveLog(task, "DingTalk", webhook, NotificationStatus.FAILED.getValue(), e.getMessage());
+        if (Objects.nonNull(task.getChannels())) {
+            for (String channel : task.getChannels()) {
+                NotificationChannelStrategy strategy = strategyMap.get(channel);
+                if (Objects.nonNull(strategy)) {
+                    List<DispatchResult> results = strategy.send(task, rendered, user, data);
+                    log.info("[Worker] Dispatched to channel={} count={}", channel, results.size());
+                    for (DispatchResult result : results) {
+                        saveLog(task, channel, result.getRecipient(), 
+                                result.isSuccess() ? NotificationStatus.SUCCESS.getValue() : NotificationStatus.FAILED.getValue(), 
+                                result.getErrorMessage());
+                    }
+                } else {
+                    log.warn("No strategy found for channel: {}", channel);
+                }
             }
         }
     }
@@ -184,7 +175,14 @@ public class NotificationWorkerServiceImpl implements NotificationWorkerService 
                     Map.Entry::getValue
                 ));
         }
-        return emptyMap();
+        if (obj instanceof String) {
+            try {
+                return objectMapper.readValue((String) obj, Map.class);
+            } catch (Exception e) {
+                log.warn("[Worker] failed to parse data JSON: {}", obj, e);
+            }
+        }
+        return new java.util.HashMap<>();
     }
 
     private String renderTemplate(String template, Map<String, Object> data) throws JsonProcessingException {
@@ -202,45 +200,5 @@ public class NotificationWorkerServiceImpl implements NotificationWorkerService 
         }
         matcher.appendTail(sb);
         return sb.toString();
-    }
-
-    private List<String> resolveReceivers(Map<String, Object> data, String fallbackEmail) {
-        List<String> receivers = new ArrayList<>();
-        Object rcObj = data.get("receivers");
-        if (rcObj instanceof List<?> list) {
-            for (Object item : list) {
-                if (Objects.nonNull(item)) {
-                    receivers.add(String.valueOf(item));
-                }
-            }
-        }
-        if (receivers.isEmpty() && Objects.nonNull(fallbackEmail)) {
-            receivers.add(fallbackEmail);
-        }
-        return receivers;
-    }
-
-    private List<EmailAttachment> parseAttachments(Object attachmentsObj) {
-        List<EmailAttachment> attachments = new ArrayList<>();
-        if (!(attachmentsObj instanceof List<?> list)) {
-            return attachments;
-        }
-        for (Object item : list) {
-            if (!(item instanceof Map<?, ?> map)) {
-                continue;
-            }
-            String filename = Objects.toString(map.get("filename"), null);
-            Object contentObj = map.get("content");
-            if (Objects.isNull(contentObj)) {
-                continue;
-            }
-            try {
-                byte[] bytes = Base64.getDecoder().decode(String.valueOf(contentObj));
-                attachments.add(new EmailAttachment(filename, bytes));
-            } catch (IllegalArgumentException e) {
-                log.warn("Skip invalid attachment base64 for file {}", filename);
-            }
-        }
-        return attachments;
     }
 }

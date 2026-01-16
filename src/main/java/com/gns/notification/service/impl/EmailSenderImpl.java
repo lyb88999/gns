@@ -1,7 +1,7 @@
 package com.gns.notification.service.impl;
 
-import com.gns.notification.service.EmailSender;
-import com.gns.notification.service.EmailAttachment;
+import com.gns.notification.service.sender.EmailSender;
+import com.gns.notification.service.sender.EmailAttachment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ByteArrayResource;
