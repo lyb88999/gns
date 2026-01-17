@@ -4,22 +4,6 @@ spring:
   config:
     import: optional:classpath:application-secret.yml
   application:
-# ... (rest of file with placeholders)
-    username: root
-    password: ${GNS_DB_PASSWORD:root} # Overridden by secret.yml
-# ...
-  mail:
-    host: smtp.qq.com
-    username: yubolee1217@qq.com
-    password: ${GNS_MAIL_PASSWORD} # Overridden by secret.yml
-# ...
-app:
-  security:
-    jwt-secret: ${GNS_JWT_SECRET:change-me} # Overridden by secret.yml
-# ...
-ai:
-  baidu:
-    api-key: ${GNS_BAIDU_API_KEY} # Overridden by secret.yml
     name: universal-notification-system
   datasource:
     url: jdbc:mysql://localhost:3306/gns?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
