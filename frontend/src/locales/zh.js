@@ -119,7 +119,9 @@ export default {
         wechatToUser: '接收用户 (可选, 默认为全员)',
         wechatWebhook: '群机器人 Webhook',
         wechatWebhookHint: '如果填写了 Webhook，将优先使用机器人模式发送（仅支持发到群）。',
-        orUseAppConfig: '或者使用应用配置 (更强大)'
+        orUseAppConfig: '或者使用应用配置 (更强大)',
+        aiAssist: '✨ AI 智能填单',
+        closeAI: '关闭 AI 助手'
     },
     logs: {
         subtitle: '监控通知投递历史',
@@ -164,5 +166,14 @@ export default {
         name: '姓名',
         email: '邮箱',
         role: '角色'
+    },
+    ai: {
+        title: 'AI 助手',
+        welcome: '我是你的智能任务助手。请描述你想创建的任务 (例如："每天早上8点提醒大家填写周报，通过企业微信发送")',
+        placeholder: '描述你的任务...',
+        apply: '应用到表单',
+        success: '以为您准备好了任务："{name}"。\n\n{explanation}',
+        error: '抱歉，我没有理解您的意图，请尝试提供更多细节或换一种说法。',
+        loading: '思考中...'
     }
 }

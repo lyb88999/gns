@@ -1,16 +1,18 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-import { Plus, Search, Edit, Delete, VideoPlay, CopyDocument } from '@element-plus/icons-vue'
+import { Plus, Search, Edit, Delete, VideoPlay, CopyDocument, MagicStick } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
 import axios from '../utils/request'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import AIChatAssist from '../components/AIChatAssist.vue'
 
 const { t } = useI18n()
 const authStore = useAuthStore()
 
 const tasks = ref([])
 const dialogVisible = ref(false)
+const showAI = ref(false)
 const isEdit = ref(false)
 const currentId = ref(null)
 const searchQuery = ref('')
@@ -180,6 +182,40 @@ const handleSubmit = async () => {
     }
 }
 
+const handleTaskParsed = (data) => {
+    // Fill the form with AI data
+    if (data.name) form.value.name = data.name
+    if (data.cron) {
+        form.value.triggerType = 'cron'
+        form.value.cronExpression = data.cron
+    }
+    if (data.channel) {
+        // AI might return one string, but form expects array
+        // Also map 'WeChat' -> 'WeChat', ensure case match if possible
+        const c = data.channel
+        if (!form.value.channels.includes(c)) {
+             form.value.channels.push(c)
+        }
+    }
+    if (data.template) form.value.messageTemplate = data.template
+    if (data.recipient) {
+         // Try to guess where to put recipient based on channel
+         if (form.value.channels.includes('Email')) {
+             // We don't have a direct recipient field in main form (it depends on customData usually or logic).
+             // But let's assume messageTemplate might hold it? No.
+             // Usually GNS recipients are in customData or part of task specific logic.
+             // For now, let's append to description or specialized field if available.
+             // Actually, for Email, we might need a 'to' field in customData if not reusing WechatToUser.
+             // Let's assume user has to manually fill sensitive details, or AI puts it in description.
+             form.value.description += ` [To: ${data.recipient}]`
+         }
+    }
+    
+    ElMessage.success('Form filled by AI!')
+    showAI.value = false // Close chat or keep open? Close is cleaner.
+}
+
+
 onMounted(() => {
     fetchTasks()
 })
@@ -282,7 +318,18 @@ onMounted(() => {
         </el-table>
     </div>
 
-    <el-dialog v-model="dialogVisible" :title="isEdit ? t('tasks.editDialog') : t('tasks.createDialog')" width="500px" class="rounded-xl overflow-hidden !bg-white dark:!bg-gray-800 dark:!text-white">
+    <el-dialog v-model="dialogVisible" :title="isEdit ? t('tasks.editDialog') : t('tasks.createDialog')" width="600px" class="rounded-xl overflow-hidden !bg-white dark:!bg-gray-800 dark:!text-white">
+        <!-- AI Toggle -->
+        <div v-if="!isEdit" class="mb-4">
+             <el-button v-if="!showAI" type="primary" plain class="w-full" :icon="MagicStick" @click="showAI = true">
+                 {{ t('tasks.aiAssist') }}
+             </el-button>
+             <div v-else class="h-80 mb-4 transition-all duration-300 ease-in-out">
+                 <AIChatAssist @task-parsed="handleTaskParsed" />
+                 <el-button link type="info" size="small" class="mt-2 w-full" @click="showAI = false">{{ t('tasks.closeAI') }}</el-button>
+             </div>
+        </div>
+
         <el-form :model="form" label-position="top" class="mt-4">
             <el-form-item :label="t('tasks.name')">
                 <el-input v-model="form.name" size="large" />
