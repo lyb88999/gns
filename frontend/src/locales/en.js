@@ -119,7 +119,9 @@ export default {
         wechatToUser: 'To User (Optional)',
         wechatWebhook: 'Webhook URL (Group Robot)',
         wechatWebhookHint: 'If Webhook URL is provided, it will be used instead of App config.',
-        orUseAppConfig: 'OR Use App Configuration'
+        orUseAppConfig: 'OR Use App Configuration',
+        aiAssist: '✨ AI Auto-Fill',
+        closeAI: 'Close AI Assistant'
     },
     logs: {
         subtitle: 'Monitor notification delivery history',
@@ -164,5 +166,14 @@ export default {
         name: 'Name',
         email: 'Email',
         role: 'Role'
+    },
+    ai: {
+        title: 'AI Assistant',
+        welcome: 'I am your intelligent task assistant. describe the task you want to schedule (e.g., "Remind me to check server logs every day at 8 AM via DingTalk")',
+        placeholder: 'Describe your task...',
+        apply: 'Apply to Form',
+        success: 'I\'ve prepared a task for you: "{name}". \n\n{explanation}',
+        error: 'Sorry, I failed to understand that. Please try again or provide more details.',
+        loading: 'Thinking...'
     }
 }

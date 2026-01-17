@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.gns.notification.domain.NotificationTask;
 import com.gns.notification.domain.NotificationTaskMapper;
 import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -11,12 +12,14 @@ import org.springframework.scheduling.support.CronExpression;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.Objects;
 import java.util.Set;
 
 @Service
 @ConditionalOnProperty(name = "app.scheduler.type", havingValue = "redis")
+@Slf4j
 public class RedisTaskScheduler implements TaskSchedulerEngine {
 
     private static final String SCHEDULER_KEY = "gns:scheduler:tasks";
@@ -44,7 +47,7 @@ public class RedisTaskScheduler implements TaskSchedulerEngine {
         try {
             CronExpression cron = CronExpression.parse(task.getCronExpression());
             // Fix: Use Asia/Shanghai time for scheduling
-            java.time.ZoneId zoneId = java.time.ZoneId.of("Asia/Shanghai");
+            ZoneId zoneId = ZoneId.of("Asia/Shanghai");
             LocalDateTime now = LocalDateTime.now(zoneId);
             LocalDateTime next = cron.next(now);
             
@@ -59,7 +62,7 @@ public class RedisTaskScheduler implements TaskSchedulerEngine {
                 notificationTaskMapper.updateById(task);
             }
         } catch (Exception e) {
-            System.err.println("Failed to schedule task in Redis: " + task.getTaskId());
+            log.error("Invalid cron for task: {}", task.getTaskId());
         }
     }
 
@@ -91,9 +94,14 @@ public class RedisTaskScheduler implements TaskSchedulerEngine {
                      );
                      
                      if (Objects.nonNull(task) && Boolean.TRUE.equals(task.getStatus())) {
-                         taskExecutionService.executeTask(task, false);
-                         // Re-schedule next run
-                         schedule(task);
+                         try {
+                             taskExecutionService.executeTask(task, false);
+                         } catch (Exception e) {
+                             log.error("Task execution failed (scheduler safe-guard): {}", e.getMessage());
+                         } finally {
+                             // Always reschedule if task is still active
+                             schedule(task);
+                         }
                      } else {
                          // Task deleted or disabled, do not reschedule
                      }

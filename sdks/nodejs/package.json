@@ -1,5 +1,5 @@
 {
-  "name": "gns-sdk",
+  "name": "@lyb8889999/gns-sdk",
   "version": "1.0.0",
   "description": "Official Node.js client for the General Notification System (GNS)",
   "main": "index.js",
@@ -14,6 +14,7 @@
   "author": "GNS Team",
   "license": "MIT",
   "dependencies": {
+    "@lyb8889999/gns-sdk": "^1.0.0",
     "axios": "^1.13.2"
   }
 }

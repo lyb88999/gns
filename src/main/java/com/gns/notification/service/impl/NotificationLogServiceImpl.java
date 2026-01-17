@@ -6,6 +6,9 @@ import com.gns.notification.domain.NotificationLog;
 import com.gns.notification.domain.NotificationLogMapper;
 import com.gns.notification.dto.NotificationLogResponse;
 import com.gns.notification.dto.PageResult;
+import com.gns.notification.exception.UnauthorizedException;
+import com.gns.notification.security.UserContext;
+import com.gns.notification.security.UserContextHolder;
 import com.gns.notification.service.NotificationLogService;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -27,9 +30,9 @@ public class NotificationLogServiceImpl implements NotificationLogService {
     @Override
     public PageResult<NotificationLogResponse> listLogs(Pageable pageable, String status, String search) {
         // Security Check
-        com.gns.notification.security.UserContext ctx = com.gns.notification.security.UserContextHolder.get();
+        UserContext ctx = UserContextHolder.get();
         if (Objects.isNull(ctx)) {
-             throw new com.gns.notification.exception.UnauthorizedException("User context is missing");
+             throw new UnauthorizedException("User context is missing");
         }
 
         Page<NotificationLog> page = new Page<>(pageable.getPageNumber() + 1, pageable.getPageSize());

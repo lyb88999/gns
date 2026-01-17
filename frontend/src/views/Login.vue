@@ -31,7 +31,6 @@ const handleLogin = async () => {
   } catch (err) {
     // Error is handled by request interceptor
     console.error(err)
-  } finally {
     loading.value = false
   }
 }

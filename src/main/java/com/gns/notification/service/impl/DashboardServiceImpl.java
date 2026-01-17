@@ -143,21 +143,8 @@ public class DashboardServiceImpl implements DashboardService {
 
         // 8. Volume 24h
         // Determine interval in minutes
-        int intervalMinutes = 5;
-        if (granularity != null && !granularity.isEmpty()) {
-            String g = granularity.toLowerCase();
-            try {
-                if (g.endsWith("h")) {
-                    intervalMinutes = Integer.parseInt(g.replace("h", "")) * 60;
-                } else if (g.endsWith("m")) {
-                    intervalMinutes = Integer.parseInt(g.replace("m", ""));
-                }
-            } catch (NumberFormatException e) {
-                // ignore, keep default
-            }
-        }
-        if (intervalMinutes < 1) intervalMinutes = 5;
-        
+        int intervalMinutes = getIntervalMinutes(granularity);
+
         LocalDateTime twentyFourHoursAgo = LocalDateTime.now().minusHours(24);
         QueryWrapper<NotificationLog> recentWrapper = buildLogWrapper();
         recentWrapper.ge("created_at", twentyFourHoursAgo);
@@ -186,7 +173,7 @@ public class DashboardServiceImpl implements DashboardService {
         // 24 hours * (60 / interval)
         int totalIntervals = 24 * (60 / intervalMinutes);
         for (int i = totalIntervals; i >= 0; i--) {
-            LocalDateTime timePoint = endTime.minusMinutes(i * intervalMinutes);
+            LocalDateTime timePoint = endTime.minusMinutes((long) i * intervalMinutes);
             String timeLabel = timePoint.format(DateTimeFormatter.ofPattern("HH:mm"));
             volumeList.add(DashboardStatsResponse.VolumeData.builder()
                     .time(timeLabel)
@@ -204,5 +191,23 @@ public class DashboardServiceImpl implements DashboardService {
                 .topErrors(topErrors)
                 .notificationVolume24h(volumeList)
                 .build();
+    }
+
+    private static int getIntervalMinutes(String granularity) {
+        int intervalMinutes = 5;
+        if (Objects.nonNull(granularity) && !granularity.isEmpty()) {
+            String g = granularity.toLowerCase();
+            try {
+                if (g.endsWith("h")) {
+                    intervalMinutes = Integer.parseInt(g.replace("h", "")) * 60;
+                } else if (g.endsWith("m")) {
+                    intervalMinutes = Integer.parseInt(g.replace("m", ""));
+                }
+            } catch (NumberFormatException e) {
+                // ignore, keep default
+            }
+        }
+        if (intervalMinutes < 1) intervalMinutes = 5;
+        return intervalMinutes;
     }
 }

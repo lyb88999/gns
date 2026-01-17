@@ -9,6 +9,7 @@ import com.gns.notification.exception.RateLimitExceededException;
 import com.gns.notification.security.UserContext;
 import com.gns.notification.security.UserContextHolder;
 import com.gns.notification.service.NotificationSendService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.support.CronExpression;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -20,6 +21,7 @@ import java.util.Objects;
 import java.util.UUID;
 
 @Service
+@Slf4j
 public class TaskCoreProcessor {
 
     private final NotificationTaskMapper notificationTaskMapper;
@@ -53,10 +55,7 @@ public class TaskCoreProcessor {
         } catch (Exception e) {
             handleExecutionError(task, e, now);
             if (isManual) {
-                if (e instanceof RuntimeException) {
-                    throw (RuntimeException) e;
-                }
-                throw new RuntimeException(e);
+                throw (RuntimeException) e;
             }
         } finally {
             UserContextHolder.clear();
@@ -64,8 +63,7 @@ public class TaskCoreProcessor {
     }
 
     private void handleExecutionError(NotificationTask task, Exception e, LocalDateTime now) {
-        System.err.println("Failed to execute task: " + task.getTaskId() + ", error: " + e.getMessage());
-
+        log.error("Failed to execute task: {}", task.getTaskId(), e);
         NotificationLog log = new NotificationLog();
         log.setNotificationId(UUID.randomUUID().toString());
         log.setTaskId(task.getTaskId());

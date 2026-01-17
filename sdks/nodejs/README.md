@@ -5,13 +5,13 @@ Official Node.js client for the General Notification System (GNS).
 ## Installation
 
 ```bash
-npm install gns-sdk
+npm install @lyb8889999/gns-sdk
 ```
 
 ## Usage
 
 ```javascript
-const GNSClient = require('gns-sdk');
+const GNSClient = require('@lyb8889999/gns-sdk');
 
 // Initialize client
 const client = new GNSClient({
