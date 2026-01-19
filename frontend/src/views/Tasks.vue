@@ -185,17 +185,25 @@ const handleSubmit = async () => {
 const handleTaskParsed = (data) => {
     // Fill the form with AI data
     if (data.name) form.value.name = data.name
-    if (data.cron) {
+    
+    // Smart Trigger Type Detection
+    if (data.cron && data.cron.trim() !== '') {
         form.value.triggerType = 'cron'
         form.value.cronExpression = data.cron
+    } else {
+        // AI suggests no cron -> Likely Manual/API Trigger
+        form.value.triggerType = 'api'
+        form.value.cronExpression = ''
     }
-    if (data.channel) {
-        // AI might return one string, but form expects array
-        // Also map 'WeChat' -> 'WeChat', ensure case match if possible
-        const c = data.channel
-        if (!form.value.channels.includes(c)) {
-             form.value.channels.push(c)
-        }
+
+    if (data.channels && Array.isArray(data.channels)) {
+        data.channels.forEach(c => {
+             // Map AI output to exact case if needed, or rely on loose match
+             // Typical AI output: "DingTalk", "WeChat", "Email"
+             if (!form.value.channels.includes(c)) {
+                 form.value.channels.push(c)
+             }
+        })
     }
     if (data.template) form.value.messageTemplate = data.template
     if (data.recipient) {

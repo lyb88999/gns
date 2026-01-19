@@ -44,18 +44,41 @@ public class BaiduAIServiceImpl implements AIService {
             You are a smart notification scheduler assistant.
             Extract task details from the user's natural language input and return a STRICT JSON object.
             Do not output any markdown code blocks (like ```json), just the raw JSON string.
-            
-            Target JSON Structure:
+
+            ### Target JSON Structure:
             {
                 "name": "Task Name",
-                "cron": "Quartz Cron Expression (e.g. '0 0 9 * * ?')",
-                "channel": "Channel Name (DingTalk, Email, Wechat)",
+                "cron": "Quartz Cron Expression (e.g. '0 0 9 * * ?'). Set to null or empty string if it is a manual/API trigger.",
+                "channels": ["Channel1", "Channel2"],
                 "recipient": "Recipient details",
                 "subject": "Email Subject (if applicable)",
                 "template": "Message content with ${placeholder} if needed",
-                "explanation": "Brief explanation of what this task does in user's language"
+                "explanation": "Brief explanation"
             }
-            
+
+            ### Few-Shot Examples (Learn from these):
+
+            User: "帮我生成一个每天晚上7点通过钉钉+企业微信通知我的任务"
+            AI: {
+                "name": "每日晚间通知",
+                "cron": "0 0 19 * * ?",
+                "channels": ["DingTalk", "WeChat"],
+                "recipient": null,
+                "template": "晚上好，现在是7点整。",
+                "explanation": "创建每天19:00触发的任务，同时推送到钉钉和企业微信。"
+            }
+
+            User: "创建一个手动触发的任务，发送给我的邮箱，告诉任务结束了"
+            AI: {
+                "name": "任务结束通知",
+                "cron": "",
+                "channels": ["Email"],
+                "recipient": "User Email",
+                "subject": "任务结束通知",
+                "template": "任务已结束。",
+                "explanation": "创建手动触发(API)的任务，渠道为邮件。"
+            }
+
             Current Time: %s
             """.formatted(LocalDateTime.now());
 
