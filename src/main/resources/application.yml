@@ -1,12 +1,14 @@
 server:
   port: 8080
 spring:
+  config:
+    import: optional:classpath:application-secret.yml
   application:
     name: universal-notification-system
   datasource:
     url: jdbc:mysql://localhost:3306/gns?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-    username: root
-    password: Lyb1217..
+    username: ${GNS_DB_USER:root}
+    password: "" # Loaded from application-secret.yml
     driver-class-name: com.mysql.cj.jdbc.Driver
   data:
     redis:
@@ -23,7 +25,7 @@ spring:
   mail:
     host: smtp.qq.com
     username: yubolee1217@qq.com
-    password: hvcfuedyhiuxcdhb
+    password: "" # Loaded from application-secret.yml
     port: 465
     properties:
       mail:
@@ -39,7 +41,7 @@ mybatis-plus:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 app:
   security:
-    jwt-secret: change-me
+    jwt-secret: change-me-in-secret-yml # Loaded from application-secret.yml
     jwt-expiration-hours: 24
   notification:
     redis-stream-key: gns:notifications
@@ -47,6 +49,10 @@ app:
     consumer-name: gns-worker-1
   scheduler:
     type: redis # Options: db, redis
+ai:
+  baidu:
+    # Obtain free keys from: https://console.bce.baidu.com/
+    api-key: "" # Loaded from application-secret.yml
 logging:
   level:
     root: INFO

@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import jakarta.mail.internet.MimeMessage;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class EmailSenderImpl implements EmailSender {
@@ -30,7 +31,7 @@ public class EmailSenderImpl implements EmailSender {
     public void send(String to, String subject, String content, boolean html, List<EmailAttachment> attachments) {
         MimeMessage mimeMessage = mailSender.createMimeMessage();
         try {
-            boolean hasAttachments = attachments != null && !attachments.isEmpty();
+            boolean hasAttachments = Objects.nonNull(attachments) && !attachments.isEmpty();
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, hasAttachments, "UTF-8");
             helper.setTo(to);
             helper.setSubject(subject);
